@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<body>  
+    <div>
+        <h1>Home</h1>
+        {%if name%}
+            <h3>Welcome, {{name}}</h3>
+            {%endif%}
+        <form method="post">
+            <input type="submit" value="Games" name="Games">
+            <input type="submit" value="Profile" name="Profile">
+            <input type="submit" value="Friends" name="Friends">
+            <input type="submit" value="Settings" name="Settings">
+            <input type="submit" value="Logout" name="Logout">
+        </form>
+    </div>
+</body>

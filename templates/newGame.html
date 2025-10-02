@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<body>  
+    <div>
+        <p>New Game</p>
+        <form method="post">
+
+            <label for="PUBLIC">Public</label>
+            <input type="radio" id="PUBLIC" name="privacyStatus" value="Public"><br>
+
+            <label for="FRIENDS">Friends</label>
+            <input type="radio" id="FRIENDS" name="privacyStatus" value="Friends"><br>
+
+            <label for="PRIVATE">Private</label>
+            <input type="radio" id="PRIVATE" name="privacyStatus" value="Private"><br>
+
+            <label for="MONEY">Starting capital</label>
+            <input type="range" id="MONEY" name="moneyAmount" value="0" min="0" max="1000000" step="1000" onchange="updateSlider(this.value);"><br>
+            <input type="text" id="MONEYVAL" value="0" disabled>
+
+            <br>
+            <input type="submit" value="Create">
+            <input type="reset" value="Reset">
+
+            <br><br>
+
+            <input type="submit" name="back" value="Back">
+        </form>
+    </div>
+
+    <script>
+        function updateSlider(val)
+        {
+            document.getElementById('MONEYVAL').value = val;
+        }
+    </script>
+</body>
