@@ -4,9 +4,6 @@ app = Flask(__name__)
 
 PORT = 5000
 
-# FOR ALL PAGES
-# If user is not logged in, route to loginPage
-
 # It looks like we may need to do some HTML as well
 # We can return render_template(html file, var=thing, var=thing)
 # https://www.tutorialspoint.com/flask/flask_quick_guide.htm
@@ -134,6 +131,18 @@ def gamesPage():
 
 @app.route("/joingame", methods=['GET', 'POST'])
 def joinGame():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('joinGame.html')
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # View public games
     # View friends games
     # Join button
@@ -152,6 +161,18 @@ def joinGame():
 
 @app.route("/activegames", methods=['GET', 'POST'])
 def currentGames():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('activeGames.html')
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Display list of active games user is part of
     # Button to move to any game page
     # Back button
@@ -167,6 +188,18 @@ def currentGames():
 
 @app.route("/oldgames", methods=['GET', 'POST'])
 def oldGames():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('oldGames.html')
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Display list of any completed games user was part of
     # Button to view any of the pages
     # Back button
@@ -183,7 +216,6 @@ def oldGames():
 @app.route("/newgame", methods=['GET', 'POST'])
 def createGame():
     
-    # Logged in already
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     
@@ -198,6 +230,10 @@ def createGame():
         # SANITIZE USER INPUTS
         privacy = request.form.get("privacyStatus")
         money = request.form.get("moneyAmount")
+        startTime = request.form.get("startTime")
+        endTime = request.form.get("endTime")
+
+        # Make sure all inputs are valid
 
         # Create game in database
         # Attach game to player
@@ -210,7 +246,20 @@ def createGame():
 # I found "/play/<int:id>" , maybe this could work for the parameter
 # I think anything in <> is a url parameter (different than ___=___&___=___)
 @app.route("/play", methods=['GET', 'POST'])
-def playGame():
+@app.route("/play/<GAMEID>", methods=['GET', 'POST'])
+def playGame(GAMEID=None):
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('play.html', ID=GAMEID)
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Have parameter of which game to play
     # Update contents every second
         # This will be tricky to figure out
@@ -222,13 +271,39 @@ def playGame():
     return "Play game"
 
 @app.route("/view", methods=['GET', 'POST'])
-def viewGame():
+@app.route("/view/<GAMEID>", methods=['GET', 'POST'])
+def viewGame(GAMEID=None):
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('viewGame.html', ID=GAMEID)
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Have parameter of which game to view
     # Just view information of it
     return "View game"
 
 @app.route("/profile", methods=['GET', 'POST'])
-def profilePage():
+@app.route("/profile/<USER>", methods=['GET', 'POST'])
+def profilePage(USER=None):
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('profile.html', user=USER)
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Use parameter to find user
     # Display profile info for that user
     # Home button
@@ -237,6 +312,18 @@ def profilePage():
 
 @app.route("/friends", methods=['GET', 'POST'])
 def friendsPage():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('friends.html')
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Use cookie to find user and return the friends
     # Add friend textbox/button
     # View friend profile
@@ -245,7 +332,24 @@ def friendsPage():
 
 @app.route("/settings", methods=['GET', 'POST'])
 def settingsPage():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    if request.method == 'GET':
+        return render_template('settings.html')
+    
+    elif request.method == 'POST':
+        
+        if request.form.get("home"):
+            return redirect(url_for('homePage'))
+    
     # Settings or something maybe
     return "Settings page"
+
+@app.route("/<randomstring>")
+def wrongUrl(randomstring):
+    return redirect(url_for('landingRedirect'))
+
 
 app.run(port = PORT)#, host="0.0.0.0")  # open to all traffic on network

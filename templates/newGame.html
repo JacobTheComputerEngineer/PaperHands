@@ -14,12 +14,17 @@
             <input type="radio" id="PRIVATE" name="privacyStatus" value="Private"><br>
 
             <label for="MONEY">Starting capital</label>
-            <input type="range" id="MONEY" name="moneyAmount" value="0" min="0" max="1000000" step="1000" onchange="updateSlider(this.value);"><br>
-            <input type="text" id="MONEYVAL" value="0" disabled>
+            <input type="range" id="MONEY" name="moneyAmount" value="0" min="0" max="1000000" step="1000" onchange="updateSlider(this.value);">
+            <input type="text" id="MONEYVAL" value="0" disabled><br>
+
+            <label for="STARTTIME">Start time</label>
+            <input type="datetime-local" name="startTime" id="STARTTIME" value="" min=""><br>
+            <label for="ENDTIME">End time</label>
+            <input type="datetime-local" name="endTime" id="ENDTIME" value=""><br>
 
             <br>
             <input type="submit" value="Create">
-            <input type="reset" value="Reset">
+            <input type="reset" value="Reset" onchange="now();">
 
             <br><br>
 
@@ -32,5 +37,21 @@
         {
             document.getElementById('MONEYVAL').value = val;
         }
+
+        function now()
+        {
+            const now = new Date();
+            const year = String(now.getFullYear().toString()).padStart(4,'0');
+            const day = String((now.getDate()).toString()).padStart(2,'0');
+            const month = String((now.getMonth()+1).toString()).padStart(2,'0');
+            const hour = String(now.getHours().toString()).padStart(2,'0');
+            const minute = String(now.getMinutes().toString()).padStart(2,'0');
+            const minStartTime = `${year}-${month}-${day}T${hour}:${minute}`;
+            document.getElementById('STARTTIME').value = minStartTime;
+            document.getElementById('STARTTIME').min = minStartTime;
+            document.getElementById('ENDTIME').min = minStartTime;
+        }
+
+        now();
     </script>
 </body>
