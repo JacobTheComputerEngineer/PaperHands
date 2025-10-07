@@ -6,15 +6,13 @@ client = finnhub.Client(api_key=API_KEY)
 
 def get_stock_info(symbol):
     try:
-        # Get company profile (contains name, industry, etc.)
+    
         profile = client.company_profile2(symbol=symbol)
 
-        # Finnhub returns an empty dict if the symbol doesn't exist
         if not profile or "name" not in profile:
             print(f" '{symbol}' is not a valid ticker symbol.")
             return
-
-        # Get latest quote
+        
         quote = client.quote(symbol)
 
         print("\nStock Information")
