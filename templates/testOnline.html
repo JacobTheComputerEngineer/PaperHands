@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<body>  
+    <div>
+        <h1>Testing Connectivity</h1>
+
+        <h3>Players online:</h3><br>
+            <p id="onl">{{onl}}</p>
+
+        <br>
+        <h4>Most recent button press:</h4>
+        <p id="rbp">{{rbp}}</p>
+
+        <form method="post">
+            <input type="button" name="button" value="Press" onclick="buttonClicked();">
+        </form>
+    </div>
+
+    <script>
+        function buttonClicked()
+        {
+            fetch('/updatingRBP', {method:'POST'})
+            .then(response => response.json())
+            .then(data=>{document.getElementById('rbp').innerText = JSON.stringify(data.rbp);});
+        }
+
+        function timeUpdate()
+        {
+            fetch('/updatingOnlineAndRBPdisplay', {method:'POST'})
+            .then(response => response.json())
+            .then(data=>{
+                document.getElementById('rbp').innerText = JSON.stringify(data.rbp);
+                document.getElementById('onl').innerText = JSON.stringify(data.onl);});
+        }
+
+        setInterval(() => {
+            timeUpdate();
+        }, 1000);
+
+    </script>
+</body>

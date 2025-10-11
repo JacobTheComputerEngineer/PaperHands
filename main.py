@@ -1,4 +1,5 @@
 from flask import Flask, request, redirect, url_for, render_template, session
+import json
 
 app = Flask(__name__)
 
@@ -346,6 +347,37 @@ def settingsPage():
     
     # Settings or something maybe
     return "Settings page"
+
+online = []
+recentButtonPress = None
+@app.route("/testOnline", methods=['GET', 'POST'])
+def testOnline():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+    
+    global online
+    global recentButtonPress
+
+    if session['username'] not in online:
+        online.append(session['username'])
+
+    if request.method == 'GET':
+        return render_template('testOnline.html', onl=json.dumps(online), rbp=json.dumps(recentButtonPress))
+
+@app.route("/updatingRBP", methods=['POST'])
+def updateRBP():
+    global recentButtonPress
+    recentButtonPress = session['username']
+    return {"rbp":recentButtonPress}
+
+@app.route("/updatingOnlineAndRBPdisplay", methods=['POST'])
+def updateOnlineAndRBPdisplay():
+    global online
+    global recentButtonPress
+    return {"rbp":recentButtonPress,
+            "onl":online}
+
 
 @app.route("/<randomstring>")
 def wrongUrl(randomstring):
