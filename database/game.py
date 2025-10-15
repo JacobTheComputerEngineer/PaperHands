@@ -2,11 +2,11 @@ from . import database, account
 from typing import List
 
 class Game():
-    def Game(self, gameID: str, db: database.DB):
+    def Game(self, gameID: str):
         self.gameID = gameID
         self.players: List[account.UserAccount] = list()
         
-        self.db = db
+        self.db = None
         
     def addPlayer(self, user: account.UserAccount):
         self.players.append(user)
