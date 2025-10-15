@@ -128,7 +128,7 @@ class DB:
     returns true if game was added, false if game already exists
     """
     def addGame(self, game: game.Game):
-        if self.userdb.find_one({dbKeys.game_id: game.gameID}) is not None:
+        if self.gamedb.find_one({dbKeys.game_id: game.gameID}) is not None:
             return False
 
         self.gamedb.insert_one(

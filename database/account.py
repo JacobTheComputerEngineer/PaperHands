@@ -1,6 +1,6 @@
 #TODO: this should probably be a struct instead
 class UserAccount():
-    def UserAccount(self, username: str, password: str = "", api_key: str = "", friends = [], games = []):
+    def __init__(self, username: str, password: str = "", api_key: str = "", friends = [], games = []):
         #TODO: Do passwords correctly with hashing
         self.username = username
         self.password = password
@@ -16,7 +16,7 @@ class UserAccount():
         self.db.updateUser(self)
         
     def update_api(self, api: str):
-        self.api = api
+        self.api_key = api
         self.db.updateUser(self)
         
     def add_friend(self, friend: str):
