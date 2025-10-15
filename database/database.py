@@ -11,11 +11,13 @@ class DB:
         # ensures no duplicate users are made
         # format: Username: Account
         self.active_users = {}
+        # Same but for games
+        self.active_games = {}
     
     """
     Returns the user from the record if it exists in the record already,
     If it doesnt then make a new record and add it then return to record
-    If the user doesnt exist, creates a new user with that name with empty records and returns it
+    If the user doesnt exist, returns None
     """
     def getUser(self, username:str):
         
@@ -25,11 +27,8 @@ class DB:
             user_record = self.userdb.find_one({dbKeys.username:username})
             
             if user_record is None:
-                # case where no user, create a new one and return it
-                new_user = account.UserAccount(username)
-                new_user.db = self
-                self.active_users[username] = new_user
-                return new_user
+                # case where no user
+                return None
             
             #standard case, find user in DB then add it to record
             new_user = account.UserAccount(
@@ -52,7 +51,7 @@ class DB:
     def addUser(self, newuser: account.UserAccount):
         
         if self.userdb.find_one({dbKeys.username: newuser.username}) is not None:
-            return None
+            return False
         
         self.userdb.insert_one(
             {dbKeys.username:newuser.username, 
@@ -86,7 +85,7 @@ class DB:
                 dbKeys.game_id: game.gameID
             },
             {
-            "$addToSet":{dbKeys.users_list_key: user.username}
+            "$addToSet":{dbKeys.players_key: user.username}
             })
     
     """
@@ -99,7 +98,7 @@ class DB:
                 dbKeys.game_id: game.gameID
             },
             {
-                "$pull":{dbKeys.users_list_key: user.username}
+                "$pull":{dbKeys.players_key: user.username}
             })
         
         self.userdb.update_one(
@@ -118,10 +117,13 @@ class DB:
         
         #get players and remove all players if any left
         for users in game.players:
-            self.removeUserFromGame(users, game)
+            self.removeUserFromGame(self.getUser(users), game)
             
         #remove leftover game
         self.gamedb.delete_one({dbKeys.game_id: game.gameID})
+        
+        if game.gameID in self.active_games:
+            self.active_games.pop(game.gameID)
     
     """
     Adds game to database
@@ -133,13 +135,48 @@ class DB:
 
         self.gamedb.insert_one(
             {dbKeys.game_id: game.gameID,
-             dbKeys.users_list_key: game.players
+             dbKeys.players_key: game.players
              })
         
         game.db = self
         
-        return True
+        self.active_games[game.gameID] = game
         
+        return True
+    
+    """
+    Gets a game from gameID, if game doesnt exist return None
+    """
+    def getGame(self, gameID: str):
+        
+        if gameID in self.active_games:
+            return self.active_games[gameID]
+        else:
+            game_record = self.gamedb.find_one({dbKeys.game_id: gameID})
+            
+            if game_record is None:
+                return None
+            
+            new_game = game.Game(gameID)
+            new_game.players = game_record[dbKeys.players_key]
+            new_game.db = self
+            
+            self.active_games[gameID] = new_game
+            
+            return new_game
+        
+    """
+    Returns a list of objects of all the games
+    """
+    def getAllGames(self):
+        games = self.gamedb.find()
+        returned_games = []
+        
+        for entry in games:
+            returned_games.append(self.getGame(entry[dbKeys.game_id]))
+        
+        return returned_games
+            
     """
     Updates a user if they exist, if they dont, adds them instead
     """
