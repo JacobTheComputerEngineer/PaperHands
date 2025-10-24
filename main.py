@@ -1,5 +1,7 @@
 from flask import Flask, request, redirect, url_for, render_template, session
 import json
+from database import database as db
+import time # easy gameID
 
 app = Flask(__name__)
 
@@ -233,6 +235,10 @@ def createGame():
         money = request.form.get("moneyAmount")
         startTime = request.form.get("startTime")
         endTime = request.form.get("endTime")
+
+        settings = db.game.Settings(privacy, money, startTime, endTime)
+        game = db.game.Game.Game(settings, str(time.time()))
+        db.DB.addGame(game)
 
         # Make sure all inputs are valid
 
