@@ -135,7 +135,13 @@ class DB:
 
         self.gamedb.insert_one(
             {dbKeys.game_id: game.gameID,
-             dbKeys.players_key: game.players
+             dbKeys.players_key: game.players,
+             dbKeys.player_trade: game.trades,
+             dbKeys.privacy: game.privacy,
+             dbKeys.starting_money: game.starting_money,
+             dbKeys.balance: game.balances,
+             dbKeys.start_time: game.start_time,
+             dbKeys.end_time: game.end_time
              })
         
         game.db = self
@@ -160,6 +166,12 @@ class DB:
             new_game = game.Game(gameID)
             new_game.players = game_record[dbKeys.players_key]
             new_game.db = self
+            new_game.trades = game_record[dbKeys.player_trade]
+            new_game.balances = game_record[dbKeys.balance]
+            new_game.privacy = game_record[dbKeys.privacy]
+            new_game.starting_money = game_record[dbKeys.starting_money]
+            new_game.start_time = game_record[dbKeys.start_time]
+            new_game.end_time = game_record[dbKeys.end_time]
             
             self.active_games[gameID] = new_game
             
@@ -196,3 +208,25 @@ class DB:
                          dbKeys.friends: user.friends,
                          dbKeys.games_list_key: user.games}
             })
+            
+    """
+    Updates a game if it exists, if it doesnt, adds the game
+    """
+    def updateGame(self, game: game.Game):
+        if self.gamedb.find_one({dbKeys.game_id: game.gameID}) is None:
+            self.addGame(game)
+        else:
+            self.gamedb.update_one(
+                {
+                    dbKeys.game_id: game.gameID
+                },
+                {
+                    "$set": {dbKeys.players_key: game.players,
+                             dbKeys.player_trade: game.trades,
+                             dbKeys.privacy: game.privacy,
+                             dbKeys.starting_money: game.starting_money,
+                             dbKeys.balance: game.balances,
+                             dbKeys.start_time: game.start_time,
+                             dbKeys.end_time: game.end_time}
+                }
+            )
