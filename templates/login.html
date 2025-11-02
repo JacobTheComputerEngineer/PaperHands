@@ -9,6 +9,20 @@
             <br>
             <input type="submit" value="Log in">
             <input type="reset" value="Reset">
+
+            <input type="submit" value="New User">
+
+            {%if errs%}
+                {%if erNo%}
+                <br><p>Errors detected: {{erNo}}</p>
+                <ul>
+                    {% for e in errs %}
+                    <li>{{ e }}</li>
+                    {% endfor %}
+                </ul>
+                {%endif%}
+            {%endif%}
+
         </form>
     </div>
 </body>

@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, url_for, render_template, session
 import json
-from database import database as db
+# from database import database as db
 import time # easy gameID
 
 app = Flask(__name__)
@@ -18,28 +18,43 @@ app.secret_key = b'SECRETKEYEXAMPLE' # quickstart says we need it, may be under 
 @app.route("/")
 def landingRedirect():
 
-    # If user not logged in
+    # If user logged in
     if 'username' in session:
         return redirect(url_for('homePage'))
 
-    # Else user logged in
+    # Else user not logged in
     return redirect(url_for('loginPage'))
 
 @app.route("/login", methods=['GET', 'POST'])
 def loginPage():
 
     # Logged in already
-    if 'username' in session:
-        return redirect(url_for('homePage'))
+    if 'username' not in session:
+        return redirect(url_for('createNewUser'))
     
     # Display page
     if request.method == 'GET':
         return render_template('login.html')
     
     elif request.method == 'POST':
+
+        if request.form.get("New User"):
+            return redirect(url_for('createNewUser'))
+
+
         # SANITIZE USER INPUTS
         un = request.form.get("Username")
         pw = request.form.get("Password")
+
+        errs = []
+        if un == "":
+            errs.append("Missing username\n")
+        if pw == "":
+            errs.append("Missing password\n")
+
+        if errs:
+            return render_template('login.html', errs=errs, erNo=len(errs))
+
         session['username'] = un
         print(un)
         print(pw)
@@ -60,7 +75,7 @@ def createNewUser():
         return redirect(url_for('homePage'))
     
     if request.method == 'GET':
-        return render_template('login.html')
+        return render_template('createAccount.html')
     
     elif request.method == 'POST':
         # SANITIZE USER INPUTS
@@ -68,6 +83,24 @@ def createNewUser():
         pw = request.form.get("Password")
         cw = request.form.get("Confirm Password")
         fk = request.form.get("Finnhub Key")
+
+        errs = []
+        if un == "":
+            errs.append("Missing username\n")
+        # CHEK UN DNE
+        if pw == "":
+            errs.append("Missing password\n")
+        if cw == "":
+            errs.append("Missing password confirmation\n")
+        if pw != cw:
+            errs.append("Passwords do not match\n")
+        if fk == "":
+            errs.append("Missing API key\n")
+        # CHECK API KEY
+
+        if errs:
+            return render_template('createAccount.html', errs=errs, erNo=len(errs))
+        
         session['username'] = un
 
         # If
@@ -236,9 +269,80 @@ def createGame():
         startTime = request.form.get("startTime")
         endTime = request.form.get("endTime")
 
-        settings = db.game.Settings(privacy, money, startTime, endTime)
-        game = db.game.Game.Game(settings, str(time.time()))
-        db.DB.addGame(game)
+        errs = []
+
+        print(privacy)
+        print(money)
+        print(startTime)
+        print(endTime)
+
+        yr = time.localtime().tm_year
+        mon = time.localtime().tm_mon
+        day = time.localtime().tm_mday
+        hr = time.localtime().tm_hour
+        min = time.localtime().tm_min
+
+        print(yr, " ", startTime[:4])
+        print(mon, " ", startTime[5:7])
+        print(day, " ", startTime[8:10])
+        print(hr, " ", startTime[11:13])
+        print(min, " ", startTime[14:16])
+
+
+        if privacy == None:
+            errs.append("Missing privacy\n") # Fix new line
+
+        if int(startTime[:4]) < yr: # Invalid year start
+            errs.append("Start year too early\n")
+        elif int(startTime[:4]) == yr: # This year, check others
+
+            if int(startTime[5:7]) < mon:
+                errs.append("Start month too early\n")
+            elif int(startTime[5:7]) == mon:
+
+                if int(startTime[8:10]) < day:
+                    errs.append("Start day too early\n")
+                elif int(startTime[8:10]) == day:
+
+                    if int(startTime[11:13]) < hr:
+                        errs.append("Start hour too early\n")
+                    elif int(startTime[11:13]) == hr:
+
+                        if int(startTime[14:16]) < min:
+                            errs.append("Start min too early\n")
+        
+        if int(startTime[:4]) > int(endTime[:4]): # Invalid year end
+            errs.append("End year too early\n")
+        elif int(startTime[:4]) == int(endTime[:4]): # This year, check others
+
+            if int(startTime[5:7]) > int(endTime[5:7]):
+                errs.append("End month too early\n")
+            elif int(startTime[5:7]) == int(endTime[5:7]):
+
+                if int(startTime[8:10]) > int(endTime[8:10]):
+                    errs.append("End day too early\n")
+                elif int(startTime[8:10]) == int(endTime[8:10]):
+
+                    if int(startTime[11:13]) > int(endTime[11:13]):
+                        errs.append("End hour too early\n")
+                    elif int(startTime[11:13]) == int(endTime[11:13]):
+
+                        if int(startTime[14:16]) > int(endTime[14:16]):
+                            errs.append("End min too early\n")
+
+        if errs:
+            return render_template('newGame.html', erNo=len(errs), errs=errs)
+        
+        # if money < 10000 or money > 1000000:
+        #     errs.append("Incorrect money amount\n")
+            # check start time has not occured yet
+            # check end time exists
+            # check end time is not before start time
+            # check end time is 
+
+        # settings = db.game.Settings(privacy, money, startTime, endTime)
+        # game = db.game.Game.Game(settings, str(time.time()))
+        # db.DB.addGame(game)
 
         # Make sure all inputs are valid
 

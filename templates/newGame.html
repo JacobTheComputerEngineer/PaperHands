@@ -14,13 +14,14 @@
             <input type="radio" id="PRIVATE" name="privacyStatus" value="Private"><br>
 
             <label for="MONEY">Starting capital</label>
-            <input type="range" id="MONEY" name="moneyAmount" value="0" min="0" max="1000000" step="1000" onchange="updateSlider(this.value);">
-            <input type="text" id="MONEYVAL" value="0" disabled><br>
+            <input type="range" id="MONEY" name="moneyAmount" value="10000" min="10000" max="1000000" step="1000" onchange="updateSlider(this.value);">
+            <input type="text" id="MONEYVAL" value="10000" disabled><br>
 
             <label for="STARTTIME">Start time</label>
             <input type="datetime-local" name="startTime" id="STARTTIME" value="" min=""><br>
             <label for="ENDTIME">End time</label>
             <input type="datetime-local" name="endTime" id="ENDTIME" value=""><br>
+            <!-- Add min and max to end time -->
 
             <br>
             <input type="submit" value="Create">
@@ -29,6 +30,17 @@
             <br><br>
 
             <input type="submit" name="back" value="Back">
+
+            {%if errs%}
+                {%if erNo%}
+                <br><p>Errors detected: {{erNo}}</p>
+                <ul>
+                    {% for e in errs %}
+                    <li>{{ e }}</li>
+                    {% endfor %}
+                </ul>
+                {%endif%}
+            {%endif%}
         </form>
     </div>
 
@@ -49,6 +61,7 @@
             const minStartTime = `${year}-${month}-${day}T${hour}:${minute}`;
             document.getElementById('STARTTIME').value = minStartTime;
             document.getElementById('STARTTIME').min = minStartTime;
+            document.getElementById('ENDTIME').value = minStartTime;
             document.getElementById('ENDTIME').min = minStartTime;
         }
 
