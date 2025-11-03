@@ -207,13 +207,42 @@ def joinGame():
         # Move to game
 
     # THIS WILL BE VERY HEAVY
-
+    
+    current_user = app_database.getUser(session['username'])
+    
+    games_list = app_database.getAllGames()
+    game_id_list = list() # use this list to display all the games
+    for game in games_list:
+        if game.privacy == "Public":
+            game_id_list.append(game.gameID)
+        elif game.privacy == "Friends":
+            # look for if any are friends in this game
+            is_friend = False;
+            for players in game.players:
+                game_user = app_database.getUser(players)
+                if current_user.username in game_user.friends:
+                    is_friend = True
+                    break
+                
+            if is_friend:
+                game_id_list.append(game.gameID)
+    
     # For every game available for player to join
     #   Display it 
     #   Be able to click on it
     #       Add game to player
     #       Move to playGame
 
+    # to join a game
+    game_id_selected = ""
+    game_to_join = app_database.getGame(game_id_selected)
+    
+    if game_to_join is None:
+        # some kind of error
+        pass
+    else:
+        game_to_join.addPlayer(current_user)
+    
     return "Join game"
 
 @app.route("/activegames", methods=['GET', 'POST'])
@@ -236,6 +265,13 @@ def currentGames():
 
     # THIS WILL ALSO BE HEAVY
 
+    # TODO: I didnt realize that we needed to store active/dead/not started games so for now this just
+    # returns a list of games that the user is in
+    
+    current_user = app_database.getUser(session['username'])
+    game_id_list = current_user.games
+    
+    
     # For every not completed game attached to the player
     #   Display it 
     #   Be able to click on it
@@ -263,6 +299,12 @@ def oldGames():
 
     # STILL HEAVY
 
+     # TODO: I didnt realize that we needed to store active/dead/not started games so for now this just
+    # returns a list of games that the user is in
+    
+    current_user = app_database.getUser(session['username'])
+    game_id_list = current_user.games
+    
     # For every completed game attached to the player
     #   Display it 
     #   Be able to click on it
@@ -423,6 +465,10 @@ def viewGame(GAMEID=None):
             return redirect(url_for('homePage'))
     
     # Have parameter of which game to view
+    
+    game = app_database.getGame(GAMEID)
+    # just access the game variables directly
+    
     # Just view information of it
     return "View game"
 
@@ -442,6 +488,9 @@ def profilePage(USER=None):
             return redirect(url_for('homePage'))
     
     # Use parameter to find user
+    current_user = app_database.getUser(session['username'])
+    # directly use current_user information
+    
     # Display profile info for that user
     # Home button
     # Friends button
@@ -462,9 +511,25 @@ def friendsPage():
             return redirect(url_for('homePage'))
     
     # Use cookie to find user and return the friends
+    
+    # show friends list
+    current_user = app_database.getUser(session['username'])
+    
+    friends_list = current_user.friends
+    
+    # if adding a friend
+    friend_username = ""
+    app_database.getUser(friend_username)
+    if friend_username is None:
+        # some kind of error
+        pass
+    else:
+        current_user.add_friend(friend_username)
+    
     # Add friend textbox/button
     # View friend profile
-        # route to profile with a parameter
+        # route to profile with a parameter    
+    
     return "Friends page"
 
 @app.route("/settings", methods=['GET', 'POST'])

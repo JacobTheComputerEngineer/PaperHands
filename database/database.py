@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from . import account, game, dbKeys
+from typing import List
 
 class DB:
     
@@ -180,7 +181,7 @@ class DB:
     """
     Returns a list of objects of all the games
     """
-    def getAllGames(self):
+    def getAllGames(self) -> List[game.Game]:
         games = self.gamedb.find()
         returned_games = []
         
