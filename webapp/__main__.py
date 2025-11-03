@@ -21,6 +21,23 @@ PORT = 5000
 # https://pythonbasics.org/flask-cookies/
 # https://flask.palletsprojects.com/en/stable/quickstart/
 
+'''
+TODO
+Do not show user games user is already in
+Do not join games user is already in
+Show different games based on privacy settings
+Test adding a new user to a game
+View current games
+View old games
+Profile
+Settings
+Friends system
+
+Game page
+    Live updates - for demo
+    All logic
+'''
+
 app.secret_key = b'SECRETKEYEXAMPLE' # quickstart says we need it, may be under the hood stuff
 
 @app.route("/")
@@ -60,6 +77,8 @@ def loginPage():
             errs.append("Missing username\n")
         if pw == "":
             errs.append("Missing password\n")
+
+        # Errors username DNE and wrong password
 
         if errs:
             return render_template('login.html', errs=errs, erNo=len(errs))
@@ -193,12 +212,25 @@ def joinGame():
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        return render_template('joinGame.html')
+
+        games_list = app_database.getAllGames()
+        game_id_list = list() # use this list to display all the games
+        for game in games_list:
+            if game.privacy == "Public":
+                game_id_list.append(game.gameID)
+        return render_template('joinGame.html', gameIDs=game_id_list)
     
     elif request.method == 'POST':
         
         if request.form.get("home"):
             return redirect(url_for('homePage'))
+        
+        if request.form.get("back"):
+            return redirect(url_for('gamesPage'))
+        
+        gameID = request.form.get("join")
+        if gameID:
+            return redirect(url_for('playGame', GAMEID=gameID))
     
     # View public games
     # View friends games
@@ -414,11 +446,14 @@ def createGame():
         # Attach game to player
         # redirect to game
         game = database.game.Game(name, privacy, money, startTime, endTime)
-        app_database.addGame(game)
+
+        if not app_database.addGame(game):
+            errs.append("Game Name taken\n")
+            return render_template('newGame.html', erNo=len(errs), errs=errs)
         
         game.addPlayer(app_database.getUser(session["username"]))
         
-        return redirect(url_for('homePage'))
+        return redirect(url_for('playGame', GAMEID=game.gameID))
     
     return "New game"
 
@@ -432,7 +467,8 @@ def playGame(GAMEID=None):
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        return render_template('play.html', ID=GAMEID)
+        game = app_database.getGame(GAMEID)
+        return render_template('play.html', ID=game.gameID) #TODO display more info
     
     elif request.method == 'POST':
         

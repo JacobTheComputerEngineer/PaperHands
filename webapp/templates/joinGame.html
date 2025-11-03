@@ -4,6 +4,19 @@
         <p>Join Game</p>
         <form method="post">
             <input type="submit" name="home" value="Home">
+            <input type="submit" name="back" value="Back">
+
+            <div>
+            {%if gameIDs%}
+                <br>Games Available:<br>
+                    {% for g in gameIDs %}
+                        {{ g }}
+                        <button type="submit" name="join" value="{{g}}">Join</button>
+                        <br>
+                    {% endfor %}
+            {%endif%}
+    </div>
+
         </form>
     </div>
 </body>
