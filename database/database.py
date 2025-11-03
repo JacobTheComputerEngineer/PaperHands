@@ -19,7 +19,7 @@ class DB:
     If it doesnt then make a new record and add it then return to record
     If the user doesnt exist, returns None
     """
-    def getUser(self, username:str):
+    def getUser(self, username:str) -> account.UserAccount:
         
         if username in self.active_users:
             return self.active_users[username]
@@ -153,7 +153,7 @@ class DB:
     """
     Gets a game from gameID, if game doesnt exist return None
     """
-    def getGame(self, gameID: str):
+    def getGame(self, gameID: str) -> game.Game:
         
         if gameID in self.active_games:
             return self.active_games[gameID]

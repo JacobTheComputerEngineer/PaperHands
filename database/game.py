@@ -43,6 +43,8 @@ class Game():
         self.trades[user.username] = dict()
         self.balances[user.username] = self.starting_money
         self.db.addUserToGame(user.username, self.gameID)
+        
+        user.games.append(self.gameID)
     
     """
     Stops the game and removes it from the database

@@ -3,6 +3,14 @@ import json
 # from database import database as db
 import time # easy gameID
 
+from pymongo import MongoClient
+from database import database, game, account
+
+MONGO_PORT = 27017
+MONGO_ADDR = "localhost"
+mongo_db = MongoClient(f"mongodb://{MONGO_ADDR}:{MONGO_PORT}/")
+app_database = database.DB(mongo_db["paperhands"])
+
 app = Flask(__name__)
 
 PORT = 5000
@@ -29,8 +37,8 @@ def landingRedirect():
 def loginPage():
 
     # Logged in already
-    if 'username' not in session:
-        return redirect(url_for('createNewUser'))
+    # if 'username' not in session:
+    #     return redirect(url_for('createNewUser'))
     
     # Display page
     if request.method == 'GET':
@@ -60,12 +68,17 @@ def loginPage():
         print(pw)
 
         # Check database
-
+        user = app_database.getUser(un)
         # If in database
-        return redirect(url_for('homePage'))
-    
+        if user is not None:
+            if user.password == pw:
+                return redirect(url_for('homePage'))
+            else:
+                # Wrong password
+                return redirect(url_for('loginPage'))
+        else:
         # If not in database
-        return redirect(url_for('loginPage'))
+            return redirect(url_for('loginPage'))
 
 @app.route("/createAccount", methods=['GET', 'POST'])
 def createNewUser():
@@ -107,10 +120,17 @@ def createNewUser():
         #   Username is new
         #   pw == cw
         #   fk is a properly working key
-        return redirect(url_for('homePage'))
-    
-        # Else
-        return redirect(url_for('createNewUser'))
+        user = app_database.getUser(un)
+        
+        if user is not None:
+            # User already exists
+            return redirect(url_for('createNewUser'))
+        else:
+            # Else create new user
+            user = database.account.UserAccount(un, pw, fk)
+            # TODO: Verify FK key
+            app_database.addUser(user)
+            return redirect(url_for('homePage'))
 
 @app.route("/home", methods=['GET', 'POST'])
 def homePage():
@@ -264,6 +284,7 @@ def createGame():
             return redirect(url_for('gamesPage'))
 
         # SANITIZE USER INPUTS
+        name = request.form.get("gameName")
         privacy = request.form.get("privacyStatus")
         money = request.form.get("moneyAmount")
         startTime = request.form.get("startTime")
@@ -349,6 +370,10 @@ def createGame():
         # Create game in database
         # Attach game to player
         # redirect to game
+        game = database.game.Game(name, privacy, money, startTime, endTime)
+        app_database.addGame(game)
+        
+        game.addPlayer(app_database.getUser(session["username"]))
         
         return redirect(url_for('homePage'))
     
