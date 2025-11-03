@@ -46,9 +46,10 @@ def loginPage():
     
     elif request.method == 'POST':
 
-        if request.form.get("New User"):
+        if request.form.get("useraction") == "New User":
             return redirect(url_for('createNewUser'))
-
+        if request.form.get("useraction") == "Reset":
+            return redirect(url_for('createNewUser'))
 
         # SANITIZE USER INPUTS
         un = request.form.get("Username")
@@ -63,7 +64,6 @@ def loginPage():
         if errs:
             return render_template('login.html', errs=errs, erNo=len(errs))
 
-        session['username'] = un
         print(un)
         print(pw)
 
@@ -72,6 +72,7 @@ def loginPage():
         # If in database
         if user is not None:
             if user.password == pw:
+                session['username'] = un
                 return redirect(url_for('homePage'))
             else:
                 # Wrong password
@@ -244,7 +245,7 @@ def currentGames():
 
 @app.route("/oldgames", methods=['GET', 'POST'])
 def oldGames():
-
+    # TODO: Implement old games in DB
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     

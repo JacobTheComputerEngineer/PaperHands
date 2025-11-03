@@ -9,7 +9,7 @@ class Game():
         privacy, 
         money: float, 
         startTime: datetime, 
-        endTime: datetime
+        endTime: datetime,
         ):
         
         self.gameID = gameID
@@ -40,11 +40,13 @@ class Game():
     """
     def addPlayer(self, user: account.UserAccount):
         self.players.append(user.username)
+        user.games.append(self.gameID)
         self.trades[user.username] = dict()
         self.balances[user.username] = self.starting_money
-        self.db.addUserToGame(user.username, self.gameID)
         
-        user.games.append(self.gameID)
+        self.db.addUserToGame(user, self)
+        
+        
     
     """
     Stops the game and removes it from the database
