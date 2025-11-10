@@ -1,28 +1,129 @@
-<!DOCTYPE html>
-<body>  
-    <div>
-        <p>Login</p>
-        <form method="post">
-            <input type="text" placeholder="Username" name="Username" value="">
-            <br>
-            <input type="password" placeholder="Password" name="Password" value="">
-            <br>
-            <input type="submit" name="useraction" value="Log in">
-            <input type="reset" name="useraction" value="Reset">
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, Arial;
+      background: #0b1020;
+      color: #e8ebf1;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #0e1530;
+      border: 1px solid #1c2a4a;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+    h1 {
+      margin: 0 0 20px 0;
+    }
+    form {
+      display: grid;
+      gap: 14px;
+    }
+    label {
+      font-size: 0.95rem;
+      color: #cfd6e6;
+    }
+    input[type=text],
+    input[type=password] {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #11182e;
+      color: #e8ebf1;
+      outline: none;
+    }
+    input[type=text]:focus,
+    input[type=password]:focus {
+      border-color: #2b7cff;
+      box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.2);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #2b7cff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn.secondary {
+      background: #11182e;
+      border: 1px solid #27365d;
+      font-weight: 600;
+    }
+    .btn:hover {
+      background: #3b8cff;
+      transform: translateY(-2px);
+    }
+    .btn:active {
+      transform: translateY(0);
+      background: #2266dd;
+    }
+    .error {
+      color: #ff8a8a;
+      margin-top: 10px;
+      background: rgba(255, 138, 138, 0.1);
+      border: 1px solid rgba(255, 138, 138, 0.35);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    ul {
+      margin: 8px 0 0 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Login</h1>
+      <form method="post">
+        <div>
+          <label for="username">Username</label>
+          <input id="username" type="text" placeholder="Username" name="Username" value="">
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="Password" name="Password" value="">
+        </div>
 
-            <input type="submit" name="useraction" value="New User">
+        <div class="actions">
+          <input class="btn" type="submit" name="useraction" value="Log in">
+          <input class="btn secondary" type="reset" name="useraction" value="Reset">
+          <input class="btn" style="background:#1e52b8" type="submit" name="useraction" value="New User">
+        </div>
 
-            {%if errs%}
-                {%if erNo%}
-                <br><p>Errors detected: {{erNo}}</p>
-                <ul>
-                    {% for e in errs %}
-                    <li>{{ e }}</li>
-                    {% endfor %}
-                </ul>
-                {%endif%}
-            {%endif%}
-
-        </form>
+        {% if errs %}
+          {% if erNo %}
+            <div class="error">
+              <p>Errors detected: {{ erNo }}</p>
+              <ul>
+                {% for e in errs %}
+                  <li>{{ e }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endif %}
+      </form>
     </div>
+  </div>
 </body>
+</html>

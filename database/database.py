@@ -170,15 +170,15 @@ class DB:
             if game_record is None:
                 return None
             
-            new_game = game.Game(gameID)
+            new_game = game.Game(gameID=gameID, 
+                                 privacy=game_record[dbKeys.privacy], 
+                                 money=game_record[dbKeys.starting_money],
+                                 startTime=game_record[dbKeys.start_time],
+                                 endTime=game_record[dbKeys.end_time])
             new_game.players = game_record[dbKeys.players_key]
             new_game.db = self
             new_game.trades = game_record[dbKeys.player_trade]
             new_game.balances = game_record[dbKeys.balance]
-            new_game.privacy = game_record[dbKeys.privacy]
-            new_game.starting_money = game_record[dbKeys.starting_money]
-            new_game.start_time = game_record[dbKeys.start_time]
-            new_game.end_time = game_record[dbKeys.end_time]
             
             self.active_games[gameID] = new_game
             
@@ -190,7 +190,6 @@ class DB:
     def getAllGames(self) -> List[game.Game]:
         games = self.gamedb.find()
         returned_games = []
-        
         for entry in games:
             returned_games.append(self.getGame(entry[dbKeys.game_id]))
         

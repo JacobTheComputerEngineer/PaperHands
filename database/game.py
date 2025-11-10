@@ -39,6 +39,7 @@ class Game():
     Adds a player to the game 
     """
     def addPlayer(self, user: account.UserAccount):
+        # Maybe add check if user == None?
         self.players.append(user.username)
         user.games.append(self.gameID)
         self.trades[user.username] = dict()
