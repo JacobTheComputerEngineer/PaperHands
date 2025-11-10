@@ -160,6 +160,16 @@
           <input type="datetime-local" name="endTime" id="ENDTIME" value="">
         </div>
 
+        <div>
+          {% if friends %}
+            {% for f in friends %}
+              <input type="checkbox" id="{{f}}" name="friend" value="{{f}}">{{f}}<br>
+            {% endfor %}
+          {% else %}
+            <div>No friends</div> <!-- add class -->
+          {% endif %}
+        </div>
+
         <div class="actions">
           <input type="submit" value="Create">
           <input type="reset" value="Reset" onchange="now();">

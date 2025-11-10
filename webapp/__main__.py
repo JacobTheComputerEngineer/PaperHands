@@ -327,7 +327,10 @@ def createGame():
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        return render_template('newGame.html')
+        user = app_database.getUser(session["username"])
+        friends = user.friends
+        # friends_username = [f.username for f in friends]
+        return render_template('newGame.html', friends=friends)
     
     elif request.method == 'POST':
 
@@ -423,11 +426,16 @@ def createGame():
         # redirect to game
         game = database.game.Game(name, privacy, money, startTime, endTime)
 
+        invited = request.form.getlist("friend")
+
         if not app_database.addGame(game):
             errs.append("Game Name taken\n")
             return render_template('newGame.html', erNo=len(errs), errs=errs)
         
         game.addPlayer(app_database.getUser(session["username"]))
+
+        for f in invited:
+            game.addPlayer(app_database.getUser(f))
         
         return redirect(url_for('playGame', GAMEID=game.gameID))
     
