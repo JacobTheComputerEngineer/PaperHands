@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, session
+from flask import Flask, request, redirect, url_for, render_template, session, jsonify
 import json
 # from database import database as db
 import time # easy gameID
@@ -23,12 +23,7 @@ PORT = 5000
 
 '''
 TODO
-Do not show user games user is already in
-Do not join games user is already in
-Show different games based on privacy settings
-Test adding a new user to a game
-View current games
-View old games
+View old games / current games
 Profile
 Settings
 Friends system
@@ -83,8 +78,8 @@ def loginPage():
         if errs:
             return render_template('login.html', errs=errs, erNo=len(errs))
 
-        print(un)
-        print(pw)
+        # print(un)
+        # print(pw)
 
         # Check database
         user = app_database.getUser(un)
@@ -213,11 +208,25 @@ def joinGame():
     
     if request.method == 'GET':
 
+        current_user = app_database.getUser(session['username'])
         games_list = app_database.getAllGames()
         game_id_list = list() # use this list to display all the games
         for game in games_list:
+            if current_user.username in game.players:
+                continue
             if game.privacy == "Public":
                 game_id_list.append(game.gameID)
+            elif game.privacy == "Friends":
+            # look for if any are friends in this game
+                is_friend = False
+                for players in game.players:
+                    game_user = app_database.getUser(players)
+                    if current_user.username in game_user.friends:
+                        is_friend = True
+                        break
+                if is_friend:
+                    game_id_list.append(game.gameID)
+
         return render_template('joinGame.html', gameIDs=game_id_list)
     
     elif request.method == 'POST':
@@ -230,50 +239,10 @@ def joinGame():
         
         gameID = request.form.get("join")
         if gameID:
+            game_to_join = app_database.getGame(gameID)
+            current_user = app_database.getUser(session['username'])
+            game_to_join.addPlayer(current_user)
             return redirect(url_for('playGame', GAMEID=gameID))
-    
-    # View public games
-    # View friends games
-    # Join button
-        # Attach game to user
-        # Move to game
-
-    # THIS WILL BE VERY HEAVY
-    
-    current_user = app_database.getUser(session['username'])
-    
-    games_list = app_database.getAllGames()
-    game_id_list = list() # use this list to display all the games
-    for game in games_list:
-        if game.privacy == "Public":
-            game_id_list.append(game.gameID)
-        elif game.privacy == "Friends":
-            # look for if any are friends in this game
-            is_friend = False;
-            for players in game.players:
-                game_user = app_database.getUser(players)
-                if current_user.username in game_user.friends:
-                    is_friend = True
-                    break
-                
-            if is_friend:
-                game_id_list.append(game.gameID)
-    
-    # For every game available for player to join
-    #   Display it 
-    #   Be able to click on it
-    #       Add game to player
-    #       Move to playGame
-
-    # to join a game
-    game_id_selected = ""
-    game_to_join = app_database.getGame(game_id_selected)
-    
-    if game_to_join is None:
-        # some kind of error
-        pass
-    else:
-        game_to_join.addPlayer(current_user)
     
     return "Join game"
 
@@ -284,12 +253,19 @@ def currentGames():
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        return render_template('activeGames.html')
+        current_user = app_database.getUser(session['username'])
+        game_id_list = current_user.games
+        # print(game_id_list)
+        return render_template('activeGames.html', gameIDs=game_id_list)
     
     elif request.method == 'POST':
         
         if request.form.get("home"):
             return redirect(url_for('homePage'))
+        
+        gameID = request.form.get("go")
+        if gameID:
+            return redirect(url_for('playGame', GAMEID=gameID))
     
     # Display list of active games user is part of
     # Button to move to any game page
@@ -300,8 +276,8 @@ def currentGames():
     # TODO: I didnt realize that we needed to store active/dead/not started games so for now this just
     # returns a list of games that the user is in
     
-    current_user = app_database.getUser(session['username'])
-    game_id_list = current_user.games
+    # current_user = app_database.getUser(session['username'])
+    # game_id_list = current_user.games
     
     
     # For every not completed game attached to the player
@@ -367,10 +343,10 @@ def createGame():
 
         errs = []
 
-        print(privacy)
-        print(money)
-        print(startTime)
-        print(endTime)
+        # print(privacy)
+        # print(money)
+        # print(startTime)
+        # print(endTime)
 
         yr = time.localtime().tm_year
         mon = time.localtime().tm_mon
@@ -378,11 +354,11 @@ def createGame():
         hr = time.localtime().tm_hour
         min = time.localtime().tm_min
 
-        print(yr, " ", startTime[:4])
-        print(mon, " ", startTime[5:7])
-        print(day, " ", startTime[8:10])
-        print(hr, " ", startTime[11:13])
-        print(min, " ", startTime[14:16])
+        # print(yr, " ", startTime[:4])
+        # print(mon, " ", startTime[5:7])
+        # print(day, " ", startTime[8:10])
+        # print(hr, " ", startTime[11:13])
+        # print(min, " ", startTime[14:16])
 
 
         if privacy == None:
@@ -468,22 +444,30 @@ def playGame(GAMEID=None):
     
     if request.method == 'GET':
         game = app_database.getGame(GAMEID)
-        return render_template('play.html', ID=game.gameID) #TODO display more info
+        return render_template('play.html', ID=game.gameID, PLAYERS=game.players) #TODO display more info
     
     elif request.method == 'POST':
         
         if request.form.get("home"):
             return redirect(url_for('homePage'))
     
-    # Have parameter of which game to play
-    # Update contents every second
-        # This will be tricky to figure out
-
-    # HEAVIEST FUNCTION
-    # WARNING THIS THING WILL BE HUGE
-    # WER'RE GONNA NEED A BIGGER BOAT
-
     return "Play game"
+
+@app.route("/updatingGame/<GAMEID>", methods=['GET', 'POST'])
+def updateGame(GAMEID=None):
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
+
+    if request.method == 'GET':
+        game = app_database.getGame(GAMEID)
+
+        if not game:
+            return "Game not found"
+        
+        return jsonify({"ID":GAMEID, "PLAYERS":game.players})
+        # return render_template('play.html', ID=json.dumps(GAMEID), PLAYERS=json.dumps(game.players))
+    
 
 @app.route("/view", methods=['GET', 'POST'])
 @app.route("/view/<GAMEID>", methods=['GET', 'POST'])
@@ -510,26 +494,22 @@ def viewGame(GAMEID=None):
 
 @app.route("/profile", methods=['GET', 'POST'])
 @app.route("/profile/<USER>", methods=['GET', 'POST'])
-def profilePage(USER=None):
+def profilePage(USER = None):
 
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        return render_template('profile.html', user=USER)
+        current_user = app_database.getUser(session['username'])
+        return render_template('profile.html', user=current_user.username, friends=current_user.friends)
     
     elif request.method == 'POST':
         
-        if request.form.get("home"):
+        if request.form.get("home") == "Home":
             return redirect(url_for('homePage'))
+        if request.form.get("friends") == "Friends":
+            return redirect(url_for('friendsPage'))
     
-    # Use parameter to find user
-    current_user = app_database.getUser(session['username'])
-    # directly use current_user information
-    
-    # Display profile info for that user
-    # Home button
-    # Friends button
     return "Profile screen"
 
 @app.route("/friends", methods=['GET', 'POST'])
@@ -538,35 +518,49 @@ def friendsPage():
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     
+    current_user = app_database.getUser(session['username'])
+    friends_list = current_user.friends
+
     if request.method == 'GET':
-        return render_template('friends.html')
+        return render_template('friends.html', friends=friends_list)
     
     elif request.method == 'POST':
         
-        if request.form.get("home"):
+        if request.form.get("home") == "Home":
             return redirect(url_for('homePage'))
+        
+        print("Before view")
+        
+        viewFriend = request.form.get("View")
+        if viewFriend != None:
+            friend = app_database.getUser(viewFriend)
+            if friend is not None:
+                return render_template('profile.html', user=friend.username, friends=friend.friends)
+            # else:
+                # error
+        
+        print("Before add")
+        
+        if request.form.get("userAction") == "Add Friend":
+            print("In add")
+            friend_username = request.form.get("friendUsername")
+            friend = app_database.getUser(friend_username)
+            if friend is None:
+            # some kind of error
+                pass
+            else:
+                if friend.username not in friends_list and friend.username != session['username']:
+                    current_user.add_friend(friend.username)
+                    friends_list = current_user.friends
+
+        print("After add")
+        
+        return render_template('friends.html', friends=friends_list)
     
     # Use cookie to find user and return the friends
     
-    # show friends list
-    current_user = app_database.getUser(session['username'])
-    
-    friends_list = current_user.friends
-    
-    # if adding a friend
-    friend_username = ""
-    app_database.getUser(friend_username)
-    if friend_username is None:
-        # some kind of error
-        pass
-    else:
-        current_user.add_friend(friend_username)
-    
-    # Add friend textbox/button
-    # View friend profile
-        # route to profile with a parameter    
-    
     return "Friends page"
+
 
 @app.route("/settings", methods=['GET', 'POST'])
 def settingsPage():
@@ -585,7 +579,7 @@ def settingsPage():
     # Settings or something maybe
     return "Settings page"
 
-online = []
+# online = []
 recentButtonPress = None
 @app.route("/testOnline", methods=['GET', 'POST'])
 def testOnline():

@@ -63,11 +63,24 @@
   <div class="container">
     <div class="card">
       <h1>Active Games</h1>
-      <div class="placeholder">
+      <!-- <div class="placeholder">
         <p>No active games found.</p>
-      </div>
+      </div> -->
       <form method="post">
         <input type="submit" name="home" value="Home">
+        {% if gameIDs %}
+        <div class="game-list">
+          <p><strong>Games Available:</strong></p>
+          {% for g in gameIDs %}
+            <div class="game-item">
+              <span>{{ g }}</span>
+              <button type="submit" name="go" value="{{ g }}">Go</button>
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p>No games available at the moment.</p>
+        {% endif %}
       </form>
     </div>
   </div>

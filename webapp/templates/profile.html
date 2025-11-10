@@ -62,13 +62,19 @@
   <div class="container">
     <div class="card">
       <h1>Profile</h1>
+      
       {% if user %}
-        <div class="username">{{ user }}</div>
+        <div class="username">{{ user }}</div>  
       {% else %}
         <div class="username">No user data available</div>
       {% endif %}
+
+      <!-- Add stats here -->
+
+
       <form method="post">
         <input type="submit" name="home" value="Home">
+        <input type="submit" name="friends" value="Friends">
       </form>
     </div>
   </div>

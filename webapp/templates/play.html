@@ -67,10 +67,49 @@
       {% else %}
         <div class="game-id">No active game selected.</div>
       {% endif %}
+
+      {% if PLAYERS %}
+        <h3>Players online:</h3><br>
+        <div id="onl" data-gameid="{{ ID }}">
+          {% for p in PLAYERS %}
+            {{p}}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
+      
       <form method="post">
         <input type="submit" name="home" value="Home">
       </form>
     </div>
   </div>
+
+  <script>
+        function printPlayers(players)
+        {
+          const item = document.getElementById('onl')
+          const GameID = item.dataset.GameID;
+          item.innerHTML='';
+          players.forEach(element => {
+            item.innerHTML += `${element}<br>`;
+          });
+        }
+        function timeUpdate()
+        {
+          const item = document.getElementById('onl')
+          const GameID = item.dataset.gameid;
+            fetch(`/updatingGame/${GameID}`, {method:'GET'})
+            .then(response => response.json())
+            .then(data=>{
+                // document.getElementById('onl').innerText = JSON.stringify(data.onl);});
+                players = data.PLAYERS;
+                printPlayers(players)});
+        }
+
+        timeUpdate();
+        setInterval(() => {
+            timeUpdate();
+        }, 1000);
+
+    </script>
 </body>
 </html>
