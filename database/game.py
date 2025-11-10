@@ -52,8 +52,27 @@ class Game():
     Stops the game and removes it from the database
     """
     def endGame(self):
+        
+        # determine winner
+        max_balance = 0
+        max_player = ""
+        for player, balance in self.balances.items():
+            if balance > max_balance:
+                max_balance = balance
+                max_player = player
+        
+        # increment winner win count
+        self.db.getUser(player).num_wins += 1
+        
         for player in self.players:
-            self.db.removeUserFromGame(self.db.getUser(player), self)
+            # update player information
+            player = self.db.getUser(player)
+            
+            player.num_games += 1
+            player.game_history.append((self.gameID, max_player))
+            self.db.updateUser(player)
+            
+            self.db.removeUserFromGame(player, self)
             
         self.db.removeGame(self)
     

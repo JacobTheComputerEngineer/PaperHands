@@ -38,6 +38,9 @@ class DB:
                 user_record[dbKeys.api_key],
                 user_record[dbKeys.friends],
                 user_record[dbKeys.games_list_key],
+                user_record[dbKeys.games_history_key],
+                user_record[dbKeys.num_games_key],
+                user_record[dbKeys.num_wins_key]
             )
             new_user.db = self
             
@@ -59,7 +62,10 @@ class DB:
              dbKeys.password:newuser.password,
              dbKeys.api_key: newuser.api_key,
              dbKeys.friends: newuser.friends,
-             dbKeys.games_list_key: newuser.games
+             dbKeys.games_list_key: newuser.games,
+             dbKeys.games_history_key: newuser.game_history,
+             dbKeys.num_games_key: newuser.num_games,
+             dbKeys.num_wins_key: newuser.num_wins
              })
         
         newuser.db = self
@@ -207,7 +213,10 @@ class DB:
                 "$set": {dbKeys.password: user.password,
                          dbKeys.api_key: user.api_key,
                          dbKeys.friends: user.friends,
-                         dbKeys.games_list_key: user.games}
+                         dbKeys.games_list_key: user.games,
+                         dbKeys.games_history_key: user.game_history,
+                         dbKeys.num_games_key: user.num_games,
+                         dbKeys.num_wins_key: user.num_wins}
             })
             
     """
@@ -228,6 +237,6 @@ class DB:
                              dbKeys.starting_money: game.starting_money,
                              dbKeys.balance: game.balances,
                              dbKeys.start_time: game.start_time,
-                             dbKeys.end_time: game.end_time}
+                             dbKeys.end_time: game.end_time,}
                 }
             )
