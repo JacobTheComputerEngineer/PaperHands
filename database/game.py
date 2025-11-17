@@ -54,6 +54,13 @@ class Game():
     """
     def endGame(self):
         
+        # sell all tickers before determining winner
+        for players in self.players:
+            #for each ticker the player holds
+            held_tickers = self.trades[players]
+            for tickers in held_tickers.keys():
+                self.sellTicker(self.db.getUser(player), tickers, held_tickers[tickers])
+        
         # determine winner
         max_balance = 0
         max_player = ""
@@ -89,10 +96,11 @@ class Game():
     #TODO: have some way of signaling nonexisting player vs insufficient balance (probably use a exceptions)
     """
     Adds a ticker to the users account, updates the trade log and the balance, 
+    if price is none will use the value given from finnhub
     if the player has an insufficent balance returns None, otherwise return new balance
     if the player is not in this game return None
     """
-    def buyTicker(self, user: account.UserAccount, ticker: str, shares: float, price: float):
+    def buyTicker(self, user: account.UserAccount, ticker: str, shares: float, price: float = None):
         if user.username not in self.players:
             return None
         if self.balances[user.username] < shares * price:
@@ -100,6 +108,10 @@ class Game():
         if ticker not in self.trades[user.username]:
             self.trades[user.username][ticker] = 0
         # good trade
+        
+        if price is None:
+            price = user.get_price(ticker)
+        
         self.balances[user.username] -= shares * price
         self.trades[user.username][ticker] += shares
         self.db.updateGame(self)
@@ -107,11 +119,12 @@ class Game():
     
     """
     Removes a ticker to the users account, updates the trade log and the balance
+    if price is none will use the value given from finnhub
     if the player is not in this game return None,
     if the player does not possess enough shares return None without changes,
     Otherwise return new balance
     """
-    def sellTicker(self, user: account.UserAccount, ticker: str, shares: float, price: float):
+    def sellTicker(self, user: account.UserAccount, ticker: str, shares: float, price: float = None):
         if user.username not in self.players:
             return None
         if ticker not in self.trades[user.username]:
@@ -120,6 +133,10 @@ class Game():
             return None
         
         # good trade
+        
+        if price is None:
+            price = user.get_price(ticker)
+        
         self.balances[user.username] += shares * price
         self.trades[user.username][ticker] -= shares
         self.db.updateGame(self)
