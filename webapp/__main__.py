@@ -458,6 +458,12 @@ def playGame(GAMEID=None):
         
         if request.form.get("home"):
             return redirect(url_for('homePage'))
+        
+        if request.form.get("leaveGame") == "Leave Game":
+            user = app_database.getUser(session['username'])
+            game = app_database.getGame(GAMEID)
+            app_database.removeUserFromGame(user, game) 
+            return redirect(url_for('gamesPage'))
     
     return "Play game"
 
@@ -472,6 +478,8 @@ def updateGame(GAMEID=None):
 
         if not game:
             return "Game not found"
+        
+        print(game.players) # Weird bug where leaving the game only shows to be updated after restarting the DB
         
         return jsonify({"ID":GAMEID, "PLAYERS":game.players})
         # return render_template('play.html', ID=json.dumps(GAMEID), PLAYERS=json.dumps(game.players))
@@ -580,12 +588,32 @@ def settingsPage():
         return render_template('settings.html')
     
     elif request.method == 'POST':
+
+        if request.form.get("deleteAccount") == "deleteAccount":
+            # Delete here
+            user = app_database.getUser(session['username'])
+
+            for g in user.games:
+                game = app_database.getGame(g)
+                app_database.removeUserFromGame(user, game)
+
+            session.pop('username', None)
+
+            app_database.removeUser(user)
+            return redirect(url_for('loginPage'))
+        
+        if request.form.get("userAction") == "Remove Friend":
+            friend_username = request.form.get("friendUsername")
+            user = app_database.getUser(session['username'])
+            if user is not None:
+                if friend_username in user.friends:
+                    user.remove_friend(friend_username)
         
         if request.form.get("home"):
             return redirect(url_for('homePage'))
     
     # Settings or something maybe
-    return "Settings page"
+    return render_template('settings.html')
 
 # online = []
 recentButtonPress = None

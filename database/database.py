@@ -74,6 +74,19 @@ class DB:
         return True
     
     """
+    Deletes a user from the DB
+    """
+    def removeUser(self, user: account.UserAccount):
+        if self.userdb.find_one({dbKeys.username: user.username}) is None:
+            return False
+        
+        self.userdb.delete_one({dbKeys.username: user.username})
+        
+        if user.username in self.active_users:
+            self.active_users.pop(user.username)
+        return True
+        
+    """
     Adds a single user to a game
     """
     def addUserToGame(self, user: account.UserAccount, game: game.Game):
@@ -162,9 +175,9 @@ class DB:
     """
     def getGame(self, gameID: str) -> game.Game:
         
-        if gameID in self.active_games:
-            return self.active_games[gameID]
-        else:
+        # if gameID in self.active_games:
+        #     return self.active_games[gameID]
+        # else:
             game_record = self.gamedb.find_one({dbKeys.game_id: gameID})
             
             if game_record is None:
