@@ -340,9 +340,16 @@ def createGame():
         # SANITIZE USER INPUTS
         name = request.form.get("gameName")
         privacy = request.form.get("privacyStatus")
-        money = request.form.get("moneyAmount")
+        money_str = request.form.get("moneyAmount")
         startTime = request.form.get("startTime")
         endTime = request.form.get("endTime")
+
+        # convert money to float
+        try:
+            money = float(money_str)
+        except (TypeError, ValueError):
+            errs.append("Starting money must be a number\n")
+            return render_template('newGame.html', erNo=len(errs), errs=errs)
 
         errs = []
 
@@ -452,10 +459,10 @@ def playGame(GAMEID=None):
     
     if request.method == 'GET':
         game = app_database.getGame(GAMEID)
-        return render_template('play.html', ID=game.gameID, PLAYERS=game.players) #TODO display more info
+        return render_template('play.html', ID=game.gameID, PLAYERS=game.players)  # TODO display more info
     
     elif request.method == 'POST':
-        
+        # existing buttons
         if request.form.get("home"):
             return redirect(url_for('homePage'))
         
@@ -464,6 +471,26 @@ def playGame(GAMEID=None):
             game = app_database.getGame(GAMEID)
             game.removePlayer(user)
             return redirect(url_for('gamesPage'))
+
+        user = app_database.getUser(session['username'])
+        game = app_database.getGame(GAMEID)
+
+        action = request.form.get("action")             # "buy" or "sell"
+        ticker = request.form.get("ticker", "").upper().strip()
+        shares_str = request.form.get("shares", "0").strip()
+
+        try:
+            shares = float(shares_str)
+        except ValueError:
+            shares = 0
+
+        if action == "buy" and ticker and shares > 0:
+            game.buyTicker(user, ticker, shares)        # uses Finnhub under the hood
+
+        if action == "sell" and ticker and shares > 0:
+            game.sellTicker(user, ticker, shares)       # uses Finnhub under the hood
+
+        return redirect(url_for('playGame', GAMEID=GAMEID))
     
     return "Play game"
 

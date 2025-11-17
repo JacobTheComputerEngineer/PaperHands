@@ -30,8 +30,8 @@ class Game():
         self.db = None
         
         # game settings
-        self.privacy = privacy # The type of this isnt well defined
-        self.starting_money = money
+        self.privacy = privacy  # The type of this isnt well defined
+        self.starting_money = float(money)
         self.start_time = startTime
         self.end_time = endTime
     
@@ -114,21 +114,33 @@ class Game():
     if the player is not in this game return None
     """
     def buyTicker(self, user: account.UserAccount, ticker: str, shares: float, price: float = None):
+        # user must be in the game
         if user.username not in self.players:
             return None
-        if self.balances[user.username] < shares * price:
-            return None
-        if ticker not in self.trades[user.username]:
-            self.trades[user.username][ticker] = 0
-        # good trade
-        
+
+        # make sure this user has a balance entry
+        if user.username not in self.balances:
+            self.balances[user.username] = float(self.starting_money)
+
+
+        # make sure this user has a trades dict
+        if user.username not in self.trades:
+            self.trades[user.username] = {}
         if price is None:
             price = user.get_price(ticker)
-        
-        self.balances[user.username] -= shares * price
+
+        cost = shares * price
+        if self.balances[user.username] < cost:
+            return None
+
+        if ticker not in self.trades[user.username]:
+            self.trades[user.username][ticker] = 0
+
+        self.balances[user.username] -= cost
         self.trades[user.username][ticker] += shares
         self.db.updateGame(self)
         return self.getPlayerBalance(user.username)
+
     
     """
     Removes a ticker to the users account, updates the trade log and the balance
@@ -140,13 +152,18 @@ class Game():
     def sellTicker(self, user: account.UserAccount, ticker: str, shares: float, price: float = None):
         if user.username not in self.players:
             return None
+
+        # if we somehow have no trades recorded for this user, nothing to sell
+        if user.username not in self.trades:
+            return None
+
         if ticker not in self.trades[user.username]:
             return None
+
         if self.trades[user.username][ticker] < shares:
             return None
         
         # good trade
-        
         if price is None:
             price = user.get_price(ticker)
         
@@ -154,3 +171,4 @@ class Game():
         self.trades[user.username][ticker] -= shares
         self.db.updateGame(self)
         return self.getPlayerBalance(user.username)
+
