@@ -47,7 +47,20 @@ class Game():
         
         self.db.addUserToGame(user, self)
         
+    """
+    Removes a player from the game, if player not in game does nothing
+    """
+    def removePlayer(self, user: account.UserAccount):
+        if user.username not in self.players:
+            return
         
+        self.players.remove(user.username)
+        user.games.remove(self.gameID)
+        
+        self.trades.pop(user.username, None)
+        self.balances.pop(user.username, None)
+        
+        self.db.removeUserFromGame(user, self)
     
     """
     Stops the game and removes it from the database

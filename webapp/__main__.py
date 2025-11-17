@@ -462,7 +462,7 @@ def playGame(GAMEID=None):
         if request.form.get("leaveGame") == "Leave Game":
             user = app_database.getUser(session['username'])
             game = app_database.getGame(GAMEID)
-            app_database.removeUserFromGame(user, game) 
+            game.removePlayer(user)
             return redirect(url_for('gamesPage'))
     
     return "Play game"
@@ -595,7 +595,7 @@ def settingsPage():
 
             for g in user.games:
                 game = app_database.getGame(g)
-                app_database.removeUserFromGame(user, game)
+                game.removePlayer(user)
 
             session.pop('username', None)
 

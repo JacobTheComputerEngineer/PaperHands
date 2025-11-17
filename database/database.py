@@ -175,9 +175,9 @@ class DB:
     """
     def getGame(self, gameID: str) -> game.Game:
         
-        # if gameID in self.active_games:
-        #     return self.active_games[gameID]
-        # else:
+        if gameID in self.active_games:
+            return self.active_games[gameID]
+        else:
             game_record = self.gamedb.find_one({dbKeys.game_id: gameID})
             
             if game_record is None:
