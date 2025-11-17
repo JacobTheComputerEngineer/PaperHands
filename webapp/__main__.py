@@ -125,6 +125,7 @@ def createNewUser():
         if fk == "":
             errs.append("Missing API key\n")
         # CHECK API KEY
+        
 
         if errs:
             return render_template('createAccount.html', errs=errs, erNo=len(errs))
@@ -144,6 +145,15 @@ def createNewUser():
             # Else create new user
             user = database.account.UserAccount(un, pw, fk)
             # TODO: Verify FK key
+            # if "status_code: 401" in user.get_ticker("AAPL"):
+            #     errs.append("API key is not valid")
+            #     return render_template('createAccount.html', errs=errs, erNo=len(errs))
+            try:
+                user.get_ticker("AAPL")
+            except Exception as e:
+                errs.append("API key is not valid")
+                return render_template('createAccount.html', errs=errs, erNo=len(errs))
+
             app_database.addUser(user)
             return redirect(url_for('homePage'))
 
@@ -479,6 +489,9 @@ def playGame(GAMEID=None):
         ticker = request.form.get("ticker", "").upper().strip()
         shares_str = request.form.get("shares", "0").strip()
 
+        if action == "" or shares_str == "":
+            return redirect(url_for('playGame', GAMEID=GAMEID))
+
         try:
             shares = float(shares_str)
         except ValueError:
@@ -506,7 +519,7 @@ def updateGame(GAMEID=None):
         if not game:
             return "Game not found"
         
-        print(game.players) # Weird bug where leaving the game only shows to be updated after restarting the DB
+        # print(game.players) # Weird bug where leaving the game only shows to be updated after restarting the DB
         
         return jsonify({"ID":GAMEID, "PLAYERS":game.players})
         # return render_template('play.html', ID=json.dumps(GAMEID), PLAYERS=json.dumps(game.players))
