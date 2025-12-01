@@ -648,6 +648,32 @@ def settingsPage():
             if user is not None:
                 if friend_username in user.friends:
                     user.remove_friend(friend_username)
+
+        if request.form.get("userAction") == "changePassword":
+            user = app_database.getUser(session['username'])
+            if user is not None:
+                newPass = request.form.get("changePass")
+                if newPass == "":
+                    errs = "Password is not valid"
+                    return render_template('settings.html', errs=errs, erNo=len(errs))
+                else:
+                    # TODO UPDATE ACTIVE USERS
+                    user.password = newPass
+
+        if request.form.get("userAction") == "changeAPIKey":
+            user = app_database.getUser(session['username'])
+            if user is not None:
+                # TODO UPDATE ACTIVE USERS
+                oldKey = user.api_key
+                user.api_key = request.form.get("changeAPIKey")
+                try:
+                    user.get_ticker("AAPL")
+                except Exception as e:
+                    errs = "API key is not valid"
+                    # TODO UPDATE ACTIVE USERS
+                    user.api_key = oldKey
+                    return render_template('settings.html', errs=errs, erNo=len(errs))
+
         
         if request.form.get("home"):
             return redirect(url_for('homePage'))

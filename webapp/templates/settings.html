@@ -70,10 +70,32 @@
 
         <input type="submit" name="home" value="Home">
         <input type="submit" name="deleteAccount" value="deleteAccount">
+        <input type="submit" name="resetStats" value="resetStats">
 
         <label for="findfriend">Remove Friend</label>
         <input id="findfriend" type="text" placeholder="Friend Username" name="friendUsername" value="">
         <button type="submit" name="userAction" value="Remove Friend">Remove Friend</button><br>
+
+        <label for="changePassword">Change Password</label>
+        <input id="changePassword" type="text" placeholder="New Password" name="changePass" value="">
+        <button type="submit" name="userAction" value="Change Password">Change Password</button><br>
+
+        <label for="changeAPI">Change API Key</label>
+        <input id="changeAPI" type="text" placeholder="New API Key" name="changeAPIKey" value="">
+        <button type="submit" name="userAction" value="changeAPIKey">Change API Key</button><br>
+
+        {% if errs %}
+          {% if erNo %}
+            <div class="error">
+              <p>Errors detected: {{ erNo }}</p>
+              <ul>
+                {% for e in errs %}
+                  <li>{{ e }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endif %}
 
       </form>
     </div>
