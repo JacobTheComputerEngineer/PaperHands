@@ -108,7 +108,62 @@
       border-radius: 10px;
       padding: 12px;
     }
-        
+    
+        .ticker-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #2b7cff;
+      background: #11182e;
+      color: #e8ebf1;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .ticker-btn:hover {
+      background: #1b2545;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.hidden {
+      display: none;
+    }
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+    }
+    .modal-content {
+      position: relative;
+      background: #0e1530;
+      border-radius: 10px;
+      border: 1px solid #1c2a4a;
+      padding: 16px;
+      width: 800px;
+      max-width: 95%;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      z-index: 1;
+    }
+    .modal-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: #e8ebf1;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    #tvchart {
+      width: 100%;
+      height: 420px;
+    }
+
   </style>
 </head>
 <body>
@@ -163,7 +218,14 @@
             {% set val = h.value %}
             {% set pnl = cp * h.shares - (avg or 0) * h.shares %}
             <tr>
-              <td>{{ h.ticker }}</td>
+              <td>
+              <button
+              type="button"
+              class="ticker-btn"
+              data-symbol="{{ h.ticker }}">
+              {{ h.ticker }}
+            </button>
+            </td>
               <td>{{ "%.2f"|format(h.shares) }}</td>
               <td>
                 {% if avg is not none %}
@@ -211,6 +273,15 @@
       </form>
     </div>
   </div>
+  <div id="chartModal" class="modal hidden">
+    <div id="chartBackdrop" class="modal-backdrop"></div>
+    <div class="modal-content">
+      <button id="chartClose" class="modal-close" type="button">&times;</button>
+      <h3 id="chartTitle" style="margin-top:0;margin-bottom:8px;"></h3>
+      <div id="tvchart"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   let lineChart = null;
@@ -316,6 +387,62 @@
         }
       });
     }
+  </script>
+
+    <!-- TradingView widget loader for ticker popup -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <script>
+    (function () {
+      const modal     = document.getElementById('chartModal');
+      const backdrop  = document.getElementById('chartBackdrop');
+      const closeBtn  = document.getElementById('chartClose');
+      const titleEl   = document.getElementById('chartTitle');
+      const tvContainer = document.getElementById('tvchart');
+
+      function openModal(symbol) {
+        if (!symbol) return;
+        modal.classList.remove('hidden');
+        titleEl.textContent = symbol + " chart";
+        tvContainer.innerHTML = "";
+
+        if (window.TradingView) {
+          new TradingView.widget({
+            container_id: "tvchart",
+            symbol: symbol,           // e.g. "AAPL"
+            interval: "1",
+            timezone: "Etc/UTC",
+            theme: "dark",
+            style: "1",
+            locale: "en",
+            autosize: true,
+            withdateranges: true,
+            allow_symbol_change: false,
+            hide_side_toolbar: false,
+            hide_top_toolbar: false,
+            details: true,
+            studies: []
+          });
+        } else {
+          console.error("TradingView not loaded");
+        }
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+        tvContainer.innerHTML = "";
+      }
+
+      closeBtn.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', closeModal);
+
+      // Listen for clicks on any ticker button
+      document.addEventListener('click', function (e) {
+        if (e.target.matches('.ticker-btn')) {
+          const symbol = e.target.dataset.symbol;
+          openModal(symbol);
+        }
+      });
+    })();
   </script>
 </body>
 </html>
