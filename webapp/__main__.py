@@ -760,6 +760,8 @@ def friendsPage():
 @app.route("/settings", methods=['GET', 'POST'])
 def settingsPage():
 
+    # print("Howdy")
+
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     
@@ -767,6 +769,8 @@ def settingsPage():
         return render_template('settings.html')
     
     elif request.method == 'POST':
+
+        print(request.form)
 
         if request.form.get("deleteAccount") == "deleteAccount":
             # Delete here
@@ -788,29 +792,32 @@ def settingsPage():
                 if friend_username in user.friends:
                     user.remove_friend(friend_username)
 
-        if request.form.get("userAction") == "changePassword":
+        print("change password")
+
+        if request.form.get("changePassButton") == "Change Password":
             user = app_database.getUser(session['username'])
+            print("Hi")
             if user is not None:
                 newPass = request.form.get("changePass")
+                print(newPass)
                 if newPass == "":
                     errs = "Password is not valid"
                     return render_template('settings.html', errs=errs, erNo=len(errs))
                 else:
-                    # TODO UPDATE ACTIVE USERS
-                    user.password = newPass
+                    user.update_password(newPass)
 
         if request.form.get("userAction") == "changeAPIKey":
             user = app_database.getUser(session['username'])
             if user is not None:
                 # TODO UPDATE ACTIVE USERS
                 oldKey = user.api_key
-                user.api_key = request.form.get("changeAPIKey")
+                user.update_api(request.form.get("changeAPIKey"))
                 try:
                     user.get_ticker("AAPL")
                 except Exception as e:
                     errs = "API key is not valid"
                     # TODO UPDATE ACTIVE USERS
-                    user.api_key = oldKey
+                    user.update_api(oldKey)
                     return render_template('settings.html', errs=errs, erNo=len(errs))
 
         
