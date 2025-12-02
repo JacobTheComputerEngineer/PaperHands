@@ -408,19 +408,21 @@ def currentGames():
 
     return "Active games"
 
-@app.route("/oldgames", methods=['GET', 'POST'])
-def oldGames():
-    # TODO: Implement old games in DB
-    if not 'username' in session:
-        return redirect(url_for('loginPage'))
+
+# Not implemented
+# @app.route("/oldgames", methods=['GET', 'POST'])
+# def oldGames():
+#     # TODO: Implement old games in DB
+#     if not 'username' in session:
+#         return redirect(url_for('loginPage'))
     
-    if request.method == 'GET':
-        return render_template('oldGames.html')
+#     if request.method == 'GET':
+#         return render_template('oldGames.html')
     
-    elif request.method == 'POST':
+#     elif request.method == 'POST':
         
-        if request.form.get("home"):
-            return redirect(url_for('homePage'))
+#         if request.form.get("home"):
+#             return redirect(url_for('homePage'))
     
     # Display list of any completed games user was part of
     # Button to view any of the pages
@@ -695,8 +697,11 @@ def profilePage(USER = None):
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        current_user = app_database.getUser(session['username'])
-        return render_template('profile.html', user=current_user.username, friends=current_user.friends)
+        if USER == None:
+            current_user = app_database.getUser(session['username'])
+        else:
+            current_user = app_database.getUser(USER)
+        return render_template('profile.html', user=current_user.username, friends=current_user.friends, gamesNum=current_user.num_games, winsNum=current_user.num_wins)
     
     elif request.method == 'POST':
         
@@ -724,20 +729,13 @@ def friendsPage():
         if request.form.get("home") == "Home":
             return redirect(url_for('homePage'))
         
-        print("Before view")
-        
         viewFriend = request.form.get("View")
         if viewFriend != None:
             friend = app_database.getUser(viewFriend)
             if friend is not None:
-                return render_template('profile.html', user=friend.username, friends=friend.friends)
-            # else:
-                # error
-        
-        print("Before add")
+                return redirect(url_for('profilePage', USER=friend.username))
         
         if request.form.get("userAction") == "Add Friend":
-            print("In add")
             friend_username = request.form.get("friendUsername")
             friend = app_database.getUser(friend_username)
             if friend is None:
@@ -760,8 +758,6 @@ def friendsPage():
 @app.route("/settings", methods=['GET', 'POST'])
 def settingsPage():
 
-    # print("Howdy")
-
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     
@@ -770,10 +766,8 @@ def settingsPage():
     
     elif request.method == 'POST':
 
-        print(request.form)
-
         if request.form.get("deleteAccount") == "deleteAccount":
-            # Delete here
+            
             user = app_database.getUser(session['username'])
 
             for g in user.games:
@@ -792,14 +786,10 @@ def settingsPage():
                 if friend_username in user.friends:
                     user.remove_friend(friend_username)
 
-        print("change password")
-
         if request.form.get("changePassButton") == "Change Password":
             user = app_database.getUser(session['username'])
-            print("Hi")
             if user is not None:
                 newPass = request.form.get("changePass")
-                print(newPass)
                 if newPass == "":
                     errs = "Password is not valid"
                     return render_template('settings.html', errs=errs, erNo=len(errs))

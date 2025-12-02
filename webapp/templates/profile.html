@@ -65,12 +65,33 @@
       
       {% if user %}
         <div class="username">{{ user }}</div>  
+
+        {% if friends %}
+          <div class="friends"></div>  
+            {% for f in friends %}
+              {{f}}
+            {% endfor %}
+        {% else %}
+          <div class="friends">No friends available</div>
+        {% endif %}
+
+        {% if gamesNum %}
+          <div class="gamesNum">{{ gamesNum }}</div>  
+        {% else %}
+          <div class="gamesNum">No games played available</div>
+        {% endif %}
+
+        {% if winsNum %}
+          <div class="winsNum">{{ winsNum }}</div>  
+        {% else %}
+          <div class="winsNum">No wins available</div>
+        {% endif %}
+
       {% else %}
         <div class="username">No user data available</div>
       {% endif %}
 
-      <!-- Add stats here -->
-
+      
 
       <form method="post">
         <input type="submit" name="home" value="Home">
