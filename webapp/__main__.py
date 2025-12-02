@@ -746,7 +746,15 @@ def friendsPage():
                     current_user.add_friend(friend.username)
                     friends_list = current_user.friends
 
-        print("After add")
+        if request.form.get("userAction") == "Remove Friend":
+            # print("Removing")
+            friend_username = request.form.get("friendUsernameRem")
+            user = app_database.getUser(session['username'])
+            # print(friend_username)
+            if user is not None:
+                if friend_username in user.friends:
+                    user.remove_friend(friend_username)
+
         
         return render_template('friends.html', friends=friends_list)
     
@@ -779,12 +787,12 @@ def settingsPage():
             app_database.removeUser(user)
             return redirect(url_for('loginPage'))
         
-        if request.form.get("userAction") == "Remove Friend":
-            friend_username = request.form.get("friendUsername")
-            user = app_database.getUser(session['username'])
-            if user is not None:
-                if friend_username in user.friends:
-                    user.remove_friend(friend_username)
+        # if request.form.get("userAction") == "Remove Friend":
+        #     friend_username = request.form.get("friendUsername")
+        #     user = app_database.getUser(session['username'])
+        #     if user is not None:
+        #         if friend_username in user.friends:
+        #             user.remove_friend(friend_username)
 
         if request.form.get("changePassButton") == "Change Password":
             user = app_database.getUser(session['username'])
