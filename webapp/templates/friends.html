@@ -25,15 +25,71 @@
       text-align: center;
     }
     h1 {
-      margin: 0 0 20px 0;
+      margin-bottom: 16px;
     }
+
     form {
       display: flex;
-      justify-content: center;
-      gap: 12px;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
     }
-    input[type=submit] {
-      padding: 12px 18px;
+
+    /* ===== Friend List ===== */
+    .friends-list {
+      width: 100%;
+      max-width: 600px;
+      background: #050815;
+      border: 1px solid #1c2a4a;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .friend-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid #222b45;
+    }
+
+    .friend-row:last-child {
+      border-bottom: none;
+    }
+
+    .friend-name {
+      font-size: 0.95rem;
+      color: #e8ebf1;
+    }
+
+    /* ===== Action Rows ===== */
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .action-row label {
+      min-width: 130px;
+      text-align: right;
+      color: #c5d0ff;
+      font-size: 0.95rem;
+    }
+
+    input[type=text] {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #27365d;
+      background: #050815;
+      color: #e8ebf1;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      padding: 10px 16px;
       border: none;
       border-radius: 8px;
       background: #11182e;
@@ -42,14 +98,30 @@
       font-weight: bold;
       cursor: pointer;
       transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
     }
-    input[type=submit]:hover {
+
+    .btn:hover {
       background: #1b2545;
       transform: translateY(-2px);
     }
-    input[type=submit]:active {
+
+    .btn:active {
       transform: translateY(0);
       background: #27365d;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .no-friends {
+      color: #a5b4e0;
+      font-size: 0.95rem;
+      padding: 10px;
     }
   </style>
 </head>
@@ -57,29 +129,49 @@
   <div class="container">
     <div class="card">
 
-      <form method="post">
-
       <h1>Friends</h1>
 
-      {% if friends %}
-        {% for f in friends %}
-            {{f}}<button type="submit" name="View" value="{{ f }}">View</button><br>
-          {% endfor %}
-      {% else %}
-        <div>No friends</div> <!-- add class -->
-      {% endif %}
+      <form method="post">
 
-      <h3>Friends</h3>
-      <label for="findfriend">Friend Username</label>
-      <input id="findfriend" type="text" placeholder="Friend Username" name="friendUsername" value="">
-      <button type="submit" name="userAction" value="Add Friend">Add Friend</button><br>
+        <!-- ===== FRIEND LIST ===== -->
+        <div class="friends-list">
+          {% if friends %}
+            {% for f in friends %}
+              <div class="friend-row">
+                <div class="friend-name">{{ f }}</div>
+                <button class="btn" type="submit" name="View" value="{{ f }}">View</button>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="no-friends">No friends</div>
+          {% endif %}
+        </div>
 
-      <label for="findfriend">Remove Friend</label>
-      <input id="findfriend" type="text" placeholder="Friend Username" name="friendUsernameRem" value=""> 
-      <button type="submit" name="userAction" value="Remove Friend">Remove Friend</button>
+        <!-- ===== ADD FRIEND ===== -->
+        <div class="action-row">
+          <label for="addfriend">Add Friend</label>
+          <input id="addfriend" type="text" placeholder="Friend Username" name="friendUsername">
+          <button class="btn" type="submit" name="userAction" value="Add Friend">
+            Add Friend
+          </button>
+        </div>
 
-      <input type="submit" name="home" value="Home">
+        <!-- ===== REMOVE FRIEND ===== -->
+        <div class="action-row">
+          <label for="removefriend">Remove Friend</label>
+          <input id="removefriend" type="text" placeholder="Friend Username" name="friendUsernameRem">
+          <button class="btn" type="submit" name="userAction" value="Remove Friend">
+            Remove
+          </button>
+        </div>
+
+        <!-- ===== HOME BUTTON ===== -->
+        <div class="btn-row">
+          <input class="btn" type="submit" name="home" value="Home">
+        </div>
+
       </form>
+
     </div>
   </div>
 </body>

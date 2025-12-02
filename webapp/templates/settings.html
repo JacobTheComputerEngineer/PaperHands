@@ -27,14 +27,54 @@
     h1 {
       margin: 0 0 20px 0;
     }
-    form {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 20px;
+
+    .placeholder {
+      margin-top: 4px;
+      color: #a5b4e0;
+      font-size: 1rem;
     }
-    input[type=submit] {
-      padding: 12px 18px;
+
+    form {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 650px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .setting-row label {
+      min-width: 150px;
+      text-align: right;
+      color: #c5d0ff;
+      font-size: 0.95rem;
+    }
+
+    input[type=text] {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #27365d;
+      background: #050815;
+      color: #e8ebf1;
+    }
+
+    .btn {
+      padding: 10px 16px;
       border: none;
       border-radius: 8px;
       background: #11182e;
@@ -43,19 +83,25 @@
       font-weight: bold;
       cursor: pointer;
       transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
     }
-    input[type=submit]:hover {
+    .btn:hover {
       background: #1b2545;
       transform: translateY(-2px);
     }
-    input[type=submit]:active {
+    .btn:active {
       transform: translateY(0);
       background: #27365d;
     }
-    .placeholder {
+
+    .error {
       margin-top: 10px;
-      color: #a5b4e0;
-      font-size: 1rem;
+      color: #ff8a8a;
+      text-align: left;
+    }
+    .error ul {
+      margin: 4px 0 0 20px;
+      padding: 0;
     }
   </style>
 </head>
@@ -66,43 +112,47 @@
       <div class="placeholder">
         <p>No adjustable settings available yet.</p>
       </div>
-      <form method="post"> 
 
-        <input type="submit" name="home" value="Home"> 
-        <input type="submit" name="deleteAccount" value="deleteAccount"> 
+      <form method="post">
+        <!-- top buttons -->
+        <div class="btn-row">
+          <input class="btn" type="submit" name="home" value="Home">
+          <input class="btn" type="submit" name="deleteAccount" value="Delete Account">
+        </div>
 
-        <!-- <label for="findfriend">Remove Friend</label>
-        <input id="findfriend" type="text" placeholder="Friend Username" name="friendUsername" value=""> 
-        <button type="submit" name="userAction" value="Remove Friend">Remove Friend</button> -->
+        <!-- change password row -->
+        <div class="setting-row">
+          <label for="changePassword">Change Password</label>
+          <input id="changePassword" type="text" placeholder="New Password"
+                 name="changePass" value="">
+          <button class="btn" type="submit" name="changePassButton" value="Change Password">
+            Change Password
+          </button>
+        </div>
 
-        <br> 
+        <!-- change API key row -->
+        <div class="setting-row">
+          <label for="changeAPI">Change API Key</label>
+          <input id="changeAPI" type="text" placeholder="New API Key"
+                 name="changeAPIKey" value="">
+          <button class="btn" type="submit" name="userAction" value="changeAPIKey">
+            Change API Key
+          </button>
+        </div>
 
-        <label for="changePassword">Change Password</label>
-        <input id="changePassword" type="text" placeholder="New Password" name="changePass" value=""> 
-        <button type="submit" name="changePassButton" value="Change Password">Change Password</button>
-        
-        <br> 
-        
-        <label for="changeAPI">Change API Key</label>
-        <input id="changeAPI" type="text" placeholder="New API Key" name="changeAPIKey" value=""> 
-        <button type="submit" name="userAction" value="changeAPIKey">Change API Key</button>
-        
-        <br> 
-        
-        {% if errs %} 
-          {% if erNo %} 
-            <div class="error"> 
+        {% if errs %}
+          {% if erNo %}
+            <div class="error">
               <p>Errors detected: {{ erNo }}</p>
-              <ul> 
-                {% for e in errs %} 
-                <li>{{ e }}</li>
-                {% endfor %} </ul>
+              <ul>
+                {% for e in errs %}
+                  <li>{{ e }}</li>
+                {% endfor %}
+              </ul>
             </div>
           {% endif %}
         {% endif %}
-      
       </form>
-
     </div>
   </div>
 </body>
