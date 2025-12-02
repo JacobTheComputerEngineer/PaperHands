@@ -64,6 +64,51 @@
       transform: translateY(0);
       background: #27365d;
     }
+        .portfolio {
+      margin-top: 24px;
+      text-align: left;
+    }
+    .portfolio h3 {
+      margin-bottom: 8px;
+    }
+    .portfolio-summary {
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      color: #c5d0ff;
+    }
+    table.holdings {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+    table.holdings th,
+    table.holdings td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #222b45;
+    }
+    table.holdings th {
+      text-align: left;
+      font-weight: 600;
+      color: #a5b4e0;
+    }
+    table.holdings td {
+      color: #e8ebf1;
+    }
+    .charts-wrapper {
+      display: flex;
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    .chart-box {
+      flex: 1;
+      background: #050815;
+      border: 1px solid #1c2a4a;
+      border-radius: 10px;
+      padding: 12px;
+    }
+        
   </style>
 </head>
 <body>
@@ -75,6 +120,12 @@
       {% else %}
         <div class="game-id">No active game selected.</div>
       {% endif %}
+      {% if START_TIME and END_TIME %}
+        <div class="game-id">
+          Starts: {{ START_TIME }}<br>
+          Ends: {{ END_TIME }}
+        </div>
+      {% endif %}
 
       {% if PLAYERS %}
         <h3>Players online:</h3><br>
@@ -85,6 +136,69 @@
         </div>
       {% endif %}
       
+            <div class="portfolio">
+        <h3>Your portfolio</h3>
+        <div class="portfolio-summary">
+          Cash: $<span id="cashValue">{{ "%.2f"|format(CASH or 0) }}</span><br>
+          Total portfolio value: $<span id="portValue">{{ "%.2f"|format(PORTVAL or 0) }}</span>
+        </div>
+
+
+        {% if HOLDINGS and HOLDINGS|length > 0 %}
+        <table class="holdings">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Shares</th>
+              <th>Avg buy price</th>
+              <th>Current price</th>
+              <th>Position value</th>
+              <th>P / L</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for h in HOLDINGS %}
+            {% set avg = h.avg_price %}
+            {% set cp = h.current_price %}
+            {% set val = h.value %}
+            {% set pnl = cp * h.shares - (avg or 0) * h.shares %}
+            <tr>
+              <td>{{ h.ticker }}</td>
+              <td>{{ "%.2f"|format(h.shares) }}</td>
+              <td>
+                {% if avg is not none %}
+                  ${{ "%.2f"|format(avg) }}
+                {% else %}
+                  –
+                {% endif %}
+              </td>
+              <td>${{ "%.2f"|format(cp) }}</td>
+              <td>${{ "%.2f"|format(val) }}</td>
+              <td>
+                {% if avg is not none %}
+                  ${{ "%.2f"|format(pnl) }}
+                {% else %}
+                  –
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+          <div class="charts-wrapper">
+          <div class="chart-box">
+            <canvas id="portfolioPie" height="160"></canvas>
+          </div>
+          <div class="chart-box">
+            <canvas id="portfolioLine" height="160"></canvas>
+          </div>
+        </div>
+        {% else %}
+          <p>You have no open positions yet. Buy a ticker to populate this view.</p>
+        {% endif %}
+      </div>
+
       <form method="post">
         <input type="text" name="ticker" placeholder="Ticker (e.g. AAPL)">
         <input type="number" name="shares" step="0.01" min="0" placeholder="Shares">
@@ -97,34 +211,111 @@
       </form>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let lineChart = null;
+  let valuePoints = [];
+
+  function printPlayers(players) {
+    const item = document.getElementById('onl');
+    item.innerHTML = '';
+    players.forEach(element => {
+      item.innerHTML += `${element}<br>`;
+    });
+  }
+
+  function timeUpdate() {
+    const item = document.getElementById('onl');
+    const GameID = item.dataset.gameid;
+
+    fetch(`/updatingGame/${GameID}`, { method: 'GET' })
+      .then(response => response.json())
+      .then(data => {
+        const players = data.PLAYERS || [];
+        printPlayers(players);
+
+        // Update the summary text above the charts
+        if (typeof data.CASH === 'number') {
+          const cashSpan = document.getElementById('cashValue');
+          if (cashSpan) cashSpan.textContent = data.CASH.toFixed(2);
+        }
+
+        if (typeof data.PORTVAL === 'number') {
+          const portSpan = document.getElementById('portValue');
+          if (portSpan) portSpan.textContent = data.PORTVAL.toFixed(2);
+
+          valuePoints.push(data.PORTVAL);
+
+         
+          const labels = valuePoints.map((_, idx) => idx + 1);
+
+          if (!lineChart) {
+            const lineCtx = document.getElementById('portfolioLine').getContext('2d');
+            lineChart = new Chart(lineCtx, {
+              type: 'line',
+              data: {
+                labels: labels,
+                datasets: [{
+                  label: 'Portfolio value',
+                  data: valuePoints,
+                  tension: 0.25,
+                  borderWidth: 2,
+                  borderColor: '#00c853',               
+                  backgroundColor: 'rgba(0, 0, 0, 0)', 
+                  pointRadius: 0                         
+                }]
+              },
+              options: {
+                plugins: {
+                  legend: { labels: { color: '#e8ebf1' } }
+                },
+                scales: {
+                  x: {
+                    ticks: { display: false }, 
+                    grid: { display: false }
+                  },
+                  y: {
+                    ticks: { color: '#e8ebf1' },
+                    grid: { color: '#222b45' }
+                  }
+                }
+              }
+            });
+          } else {
+            // Update existing chart
+            lineChart.data.labels = labels;
+            lineChart.data.datasets[0].data = valuePoints;
+            lineChart.data.datasets[0].borderColor = '#00c853'; 
+            lineChart.update();
+          }
+        }
+      });
+  }
+
+  timeUpdate();
+  setInterval(timeUpdate, 10000);
+</script>
 
   <script>
-        function printPlayers(players)
-        {
-          const item = document.getElementById('onl')
-          const GameID = item.dataset.GameID;
-          item.innerHTML='';
-          players.forEach(element => {
-            item.innerHTML += `${element}<br>`;
-          });
-        }
-        function timeUpdate()
-        {
-          const item = document.getElementById('onl')
-          const GameID = item.dataset.gameid;
-            fetch(`/updatingGame/${GameID}`, {method:'GET'})
-            .then(response => response.json())
-            .then(data=>{
-                // document.getElementById('onl').innerText = JSON.stringify(data.onl);});
-                players = data.PLAYERS;
-                printPlayers(players)});
-        }
+    const holdingsData = {{ HOLDINGS | tojson | safe }};
+    if (holdingsData.length > 0) {
+      const pieLabels = holdingsData.map(h => h.ticker);
+      const pieValues = holdingsData.map(h => h.value);
 
-        timeUpdate();
-        setInterval(() => {
-            timeUpdate();
-        }, 1000);
-
-    </script>
+      const pieCtx = document.getElementById('portfolioPie').getContext('2d');
+      new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: pieLabels,
+          datasets: [{ data: pieValues }]
+        },
+        options: {
+          plugins: {
+            legend: { labels: { color: '#e8ebf1' } }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>

@@ -34,6 +34,7 @@ class Game():
         self.starting_money = float(money)
         self.start_time = startTime
         self.end_time = endTime
+        self.avg_price: Dict[str, Dict[str, float]] = {}
     
     """
     Adds a player to the game 
@@ -122,10 +123,14 @@ class Game():
         if user.username not in self.balances:
             self.balances[user.username] = float(self.starting_money)
 
-
         # make sure this user has a trades dict
         if user.username not in self.trades:
             self.trades[user.username] = {}
+
+        # NEW: make sure this user has an avg_price dict
+        if user.username not in self.avg_price:
+            self.avg_price[user.username] = {}
+
         if price is None:
             price = user.get_price(ticker)
 
@@ -133,13 +138,27 @@ class Game():
         if self.balances[user.username] < cost:
             return None
 
-        if ticker not in self.trades[user.username]:
-            self.trades[user.username][ticker] = 0
+        old_shares = self.trades[user.username].get(ticker, 0.0)
+        old_avg = self.avg_price[user.username].get(ticker)
 
+        # good trade
+        new_total_shares = old_shares + shares
+        if new_total_shares <= 0:
+            new_avg = price
+        else:
+            if old_avg is None or old_shares <= 0:
+                new_avg = price
+            else:
+                # volume-weighted average price
+                new_avg = (old_avg * old_shares + price * shares) / new_total_shares
+
+        self.trades[user.username][ticker] = new_total_shares
         self.balances[user.username] -= cost
-        self.trades[user.username][ticker] += shares
+        self.avg_price[user.username][ticker] = new_avg
+
         self.db.updateGame(self)
         return self.getPlayerBalance(user.username)
+
 
     
     """

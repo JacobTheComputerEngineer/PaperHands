@@ -2,9 +2,11 @@ from flask import Flask, request, redirect, url_for, render_template, session, j
 import json
 # from database import database as db
 import time # easy gameID
+import datetime
 
 from pymongo import MongoClient
 from database import database, game, account
+
 
 MONGO_PORT = 27017
 MONGO_ADDR = "localhost"
@@ -34,6 +36,115 @@ Game page
 '''
 
 app.secret_key = b'SECRETKEYEXAMPLE' # quickstart says we need it, may be under the hood stuff
+
+def build_portfolio(game: game.Game, user: account.UserAccount):
+    """Return holdings list, cash, and total portfolio value for this user."""
+    username = user.username
+    positions = game.trades.get(username, {})
+    avg_price_map = getattr(game, "avg_price", {}).get(username, {})
+
+    holdings = []
+    equity_value = 0.0
+
+    for ticker, shares in positions.items():
+        if shares <= 0:
+            continue
+        try:
+            current_price = user.get_price(ticker)
+        except Exception:
+            current_price = 0.0
+
+        value = current_price * shares
+        equity_value += value
+        avg_buy = avg_price_map.get(ticker)
+
+        holdings.append({
+            "ticker": ticker,
+            "shares": shares,
+            "current_price": current_price,
+            "value": value,
+            "avg_price": avg_buy,
+        })
+
+    try:
+        cash = game.getPlayerBalance(username)
+    except Exception:
+        cash = game.balances.get(username, 0.0)
+
+    total_value = cash + equity_value
+    return holdings, cash, total_value
+
+def build_portfolio_history(game: game.Game, user: account.UserAccount, days: int = 10):
+    """
+    Build a simple time series of portfolio value over the past `days` days
+    using Finnhub daily candles for all held tickers.
+    Returns a list of {"time": label, "value": float}.
+    """
+    username = user.username
+    positions = game.trades.get(username, {})
+    if not positions:
+        return []
+
+    # we’ll add current cash to each point (approximation)
+    cash_now = game.balances.get(username, 0.0)
+
+    client = user.finn_client
+
+    now = int(time.time())
+    start = now - days * 24 * 60 * 60  # N days ago
+
+    candles_by_ticker = {}
+
+    # Pull historical candles once per ticker
+    for ticker, shares in positions.items():
+        if shares <= 0:
+            continue
+        try:
+            candles = client.stock_candles(ticker, "D", start, now)
+        except Exception:
+            continue
+
+        if not candles or candles.get("s") != "ok":
+            continue
+
+        candles_by_ticker[ticker] = candles
+
+    if not candles_by_ticker:
+        return []
+
+    # Use timestamps from the first valid ticker
+    sample = next(iter(candles_by_ticker.values()))
+    timestamps = sample.get("t", [])
+    if not timestamps:
+        return []
+
+    history = []
+    for idx, ts in enumerate(timestamps):
+        dt = datetime.datetime.fromtimestamp(ts)
+        label = dt.strftime("%b %d")  # e.g. "Dec 01"
+
+        total_equity = 0.0
+        for ticker, shares in positions.items():
+            if shares <= 0:
+                continue
+
+            candles = candles_by_ticker.get(ticker)
+            if not candles:
+                continue
+            closes = candles.get("c", [])
+            if idx >= len(closes):
+                continue
+
+            price = closes[idx]
+            total_equity += price * shares
+
+        total_value = cash_now + total_equity
+        history.append({
+            "time": label,
+            "value": round(total_value, 2),
+        })
+
+    return history
 
 @app.route("/")
 def landingRedirect():
@@ -468,9 +579,29 @@ def playGame(GAMEID=None):
         return redirect(url_for('loginPage'))
     
     if request.method == 'GET':
-        game = app_database.getGame(GAMEID)
-        return render_template('play.html', ID=game.gameID, PLAYERS=game.players)  # TODO display more info
+        game_obj = app_database.getGame(GAMEID)
+        user_obj = app_database.getUser(session['username'])
+
+        holdings, cash, total_value = build_portfolio(game_obj, user_obj)
+        history = build_portfolio_history(game_obj, user_obj)
     
+        start_str = str(game_obj.start_time).replace("T", " ")
+        end_str   = str(game_obj.end_time).replace("T", " ")
+
+        return render_template(
+            'play.html',
+            ID=game_obj.gameID,
+            PLAYERS=game_obj.players,
+            HOLDINGS=holdings,
+            CASH=cash,
+            PORTVAL=total_value,
+            HISTORY=history,
+            START_TIME=start_str,
+            END_TIME=end_str,
+        )
+
+
+
     elif request.method == 'POST':
         # existing buttons
         if request.form.get("home"):
@@ -485,7 +616,7 @@ def playGame(GAMEID=None):
         user = app_database.getUser(session['username'])
         game = app_database.getGame(GAMEID)
 
-        action = request.form.get("action")             # "buy" or "sell"
+        action = request.form.get("action")           
         ticker = request.form.get("ticker", "").upper().strip()
         shares_str = request.form.get("shares", "0").strip()
 
@@ -514,16 +645,24 @@ def updateGame(GAMEID=None):
         return redirect(url_for('loginPage'))
 
     if request.method == 'GET':
-        game = app_database.getGame(GAMEID)
-
-        if not game:
+        game_obj = app_database.getGame(GAMEID)
+        if not game_obj:
             return "Game not found"
-        
-        # print(game.players) # Weird bug where leaving the game only shows to be updated after restarting the DB
-        
-        return jsonify({"ID":GAMEID, "PLAYERS":game.players})
-        # return render_template('play.html', ID=json.dumps(GAMEID), PLAYERS=json.dumps(game.players))
-    
+
+        user_obj = app_database.getUser(session['username'])
+
+        # reuse your existing helper to compute holdings / cash / total value
+        holdings, cash, total_value = build_portfolio(game_obj, user_obj)
+
+        return jsonify({
+            "ID": GAMEID,
+            "PLAYERS": game_obj.players,
+            "PORTVAL": total_value,
+            "CASH": cash,
+            # you *can* also send holdings if you ever want to update the pie live:
+            # "HOLDINGS": holdings,
+        })
+
 
 @app.route("/view", methods=['GET', 'POST'])
 @app.route("/view/<GAMEID>", methods=['GET', 'POST'])
