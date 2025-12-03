@@ -79,6 +79,9 @@ class UserAccount():
         
         return data
     
+    """
+    Gets the current price of a given ticker
+    """
     def get_price(self, ticker:str) -> float:
         return self.get_ticker(ticker)[TickerValues.PRICE]
     

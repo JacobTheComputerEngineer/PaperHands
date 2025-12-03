@@ -157,6 +157,7 @@ class DB:
             {dbKeys.game_id: game.gameID,
              dbKeys.players_key: game.players,
              dbKeys.player_trade: game.trades,
+             dbKeys.avg_price: game.avg_price,
              dbKeys.privacy: game.privacy,
              dbKeys.starting_money: game.starting_money,
              dbKeys.balance: game.balances,
@@ -192,6 +193,7 @@ class DB:
             new_game.db = self
             new_game.trades = game_record[dbKeys.player_trade]
             new_game.balances = game_record[dbKeys.balance]
+            new_game.avg_price = game_record[dbKeys.avg_price]
             
             self.active_games[gameID] = new_game
             
@@ -245,10 +247,11 @@ class DB:
                 {
                     "$set": {dbKeys.players_key: game.players,
                              dbKeys.player_trade: game.trades,
+                             dbKeys.avg_price: game.avg_price,
                              dbKeys.privacy: game.privacy,
                              dbKeys.starting_money: game.starting_money,
                              dbKeys.balance: game.balances,
                              dbKeys.start_time: game.start_time,
-                             dbKeys.end_time: game.end_time,}
+                             dbKeys.end_time: game.end_time}
                 }
             )

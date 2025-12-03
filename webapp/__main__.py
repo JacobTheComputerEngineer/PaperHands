@@ -40,8 +40,7 @@ app.secret_key = b'SECRETKEYEXAMPLE' # quickstart says we need it, may be under 
 def build_portfolio(game: game.Game, user: account.UserAccount):
     """Return holdings list, cash, and total portfolio value for this user."""
     username = user.username
-    positions = game.trades.get(username, {})
-    avg_price_map = getattr(game, "avg_price", {}).get(username, {})
+    positions = game.getPositions(user)
 
     holdings = []
     equity_value = 0.0
@@ -56,7 +55,7 @@ def build_portfolio(game: game.Game, user: account.UserAccount):
 
         value = current_price * shares
         equity_value += value
-        avg_buy = avg_price_map.get(ticker)
+        avg_buy = game.getAvgPrice(user, ticker)
 
         holdings.append({
             "ticker": ticker,
@@ -661,8 +660,7 @@ def updateGame(GAMEID=None):
             "PLAYERS": game_obj.players,
             "PORTVAL": total_value,
             "CASH": cash,
-            # you *can* also send holdings if you ever want to update the pie live:
-            # "HOLDINGS": holdings,
+            "HOLDINGS": holdings,
         })
 
 

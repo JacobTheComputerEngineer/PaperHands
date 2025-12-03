@@ -24,6 +24,13 @@ class Game():
         
         # Format is the following
         #   Key: Player Name
+        #       Value: Dict of Trades
+        #           Key: Ticker Name
+        #           Value: Average price of share
+        self.avg_price: Dict[str, Dict[str, float]] = {}
+        
+        # Format is the following
+        #   Key: Player Name
         #       Value: Balance
         self.balances: Dict[str, float] = dict()
         
@@ -34,7 +41,6 @@ class Game():
         self.starting_money = float(money)
         self.start_time = startTime
         self.end_time = endTime
-        self.avg_price: Dict[str, Dict[str, float]] = {}
     
     """
     Adds a player to the game 
@@ -44,6 +50,7 @@ class Game():
         self.players.append(user.username)
         user.games.append(self.gameID)
         self.trades[user.username] = dict()
+        self.avg_price[user.username] = dict()
         self.balances[user.username] = self.starting_money
         
         self.db.addUserToGame(user, self)
@@ -59,6 +66,7 @@ class Game():
         user.games.remove(self.gameID)
         
         self.trades.pop(user.username, None)
+        self.avg_price.pop(user.username, None)
         self.balances.pop(user.username, None)
         
         self.db.removeUserFromGame(user, self)
@@ -127,7 +135,7 @@ class Game():
         if user.username not in self.trades:
             self.trades[user.username] = {}
 
-        # NEW: make sure this user has an avg_price dict
+        # make sure this user has an avg_price dict
         if user.username not in self.avg_price:
             self.avg_price[user.username] = {}
 
@@ -159,8 +167,6 @@ class Game():
         self.db.updateGame(self)
         return self.getPlayerBalance(user.username)
 
-
-    
     """
     Removes a ticker to the users account, updates the trade log and the balance
     if price is none will use the value given from finnhub
@@ -191,3 +197,39 @@ class Game():
         self.db.updateGame(self)
         return self.getPlayerBalance(user.username)
 
+    """
+    Returns the (unrealized) Profit Loss from a single ticker
+    """
+    def getProfitLoss(self, user: account.UserAccount, ticker: str):
+        if user.username not in self.trades:
+            return None
+
+        if ticker not in self.trades[user.username]:
+            return None
+        
+        shares = self.trades[user][ticker]
+        avg = self.avg_price[user][ticker]
+        current = self.db.getUser(user).get_price(ticker)
+        return (current - avg) * shares
+    
+    """
+    Returns the average price of a single ticker
+    """
+    def getAvgPrice(self, user:account.UserAccount, ticker:str):
+        if user.username not in self.trades:
+            return None
+
+        if ticker not in self.trades[user.username]:
+            return None
+        
+        return self.avg_price[user.username][ticker]
+    
+    """
+    Returns a list of positions held by the player
+    """
+    def getPositions(self, user:account.UserAccount):
+        if user.username not in self.trades:
+            return None
+
+        return self.trades[user.username]
+    

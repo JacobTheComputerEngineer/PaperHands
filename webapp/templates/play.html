@@ -294,6 +294,35 @@
       item.innerHTML += `${element}<br>`;
     });
   }
+function updateHoldingsTable(holdings) {
+    const tbody = document.querySelector('table.holdings tbody');
+    tbody.innerHTML = ''; // clear old rows
+
+    holdings.forEach(h => {
+      const avg = h.avg_price;
+      const cp = h.current_price;
+      const val = h.value;
+      const pnl = cp * h.shares - (avg || 0) * h.shares;
+
+      const tr = document.createElement('tr');
+
+      const tdTicker = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.className = 'ticker-btn';
+      btn.dataset.symbol = h.ticker;
+      btn.textContent = h.ticker;
+      tdTicker.appendChild(btn);
+      tr.appendChild(tdTicker);
+
+      tr.appendChild(Object.assign(document.createElement('td'), { textContent: h.shares.toFixed(2) }));
+      tr.appendChild(Object.assign(document.createElement('td'), { textContent: avg !== null ? `$${avg.toFixed(2)}` : '–' }));
+      tr.appendChild(Object.assign(document.createElement('td'), { textContent: `$${cp.toFixed(2)}` }));
+      tr.appendChild(Object.assign(document.createElement('td'), { textContent: `$${val.toFixed(2)}` }));
+      tr.appendChild(Object.assign(document.createElement('td'), { textContent: avg !== null ? `$${pnl.toFixed(2)}` : '–' }));
+
+      tbody.appendChild(tr);
+    });
+  }
 
   function timeUpdate() {
     const item = document.getElementById('onl');
@@ -309,6 +338,10 @@
         if (typeof data.CASH === 'number') {
           const cashSpan = document.getElementById('cashValue');
           if (cashSpan) cashSpan.textContent = data.CASH.toFixed(2);
+        }
+        
+        if (data.HOLDINGS && data.HOLDINGS.length > 0) {
+          updateHoldingsTable(data.HOLDINGS);
         }
 
         if (typeof data.PORTVAL === 'number') {
