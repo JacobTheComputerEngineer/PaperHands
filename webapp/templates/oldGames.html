@@ -63,11 +63,22 @@
   <div class="container">
     <div class="card">
       <h1>Old Games</h1>
-      <div class="placeholder">
-        <p>No old games to display yet.</p>
-      </div>
       <form method="post">
         <input type="submit" name="home" value="Home">
+        {% if game_history %}
+        <div class="game-list">
+          <p><strong>Completed Games:</strong></p>
+          {% for game_id, winner in game_history %}
+            <div class="game-item">
+              <span>Game ID: {{ game_id }} | Winner: {{ winner }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="placeholder">
+          <p>No old games to display yet.</p>
+        </div>
+        {% endif %}
       </form>
     </div>
   </div>

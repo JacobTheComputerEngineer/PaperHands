@@ -81,7 +81,7 @@ class Game():
             #for each ticker the player holds
             held_tickers = self.trades[players]
             for tickers in held_tickers.keys():
-                self.sellTicker(self.db.getUser(player), tickers, held_tickers[tickers])
+                self.sellTicker(self.db.getUser(players), tickers, held_tickers[tickers])
         
         # determine winner
         max_balance = 0

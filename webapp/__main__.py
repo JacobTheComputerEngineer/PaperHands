@@ -408,32 +408,19 @@ def currentGames():
     return "Active games"
 
 
-# Not implemented
-# @app.route("/oldgames", methods=['GET', 'POST'])
-# def oldGames():
-#     # TODO: Implement old games in DB
-#     if not 'username' in session:
-#         return redirect(url_for('loginPage'))
+@app.route("/oldgames", methods=['GET', 'POST'])
+def oldGames():
+
+    if not 'username' in session:
+        return redirect(url_for('loginPage'))
     
-#     if request.method == 'GET':
-#         return render_template('oldGames.html')
-    
-#     elif request.method == 'POST':
+    if request.method == 'GET':
+        current_user = app_database.getUser(session['username'])
+        return render_template('oldGames.html', game_history=current_user.game_history)
         
-#         if request.form.get("home"):
-#             return redirect(url_for('homePage'))
+    if request.form.get("home"):
+        return redirect(url_for('homePage'))
     
-    # Display list of any completed games user was part of
-    # Button to view any of the pages
-    # Back button
-
-    # STILL HEAVY
-
-     # TODO: I didnt realize that we needed to store active/dead/not started games so for now this just
-    # returns a list of games that the user is in
-    
-    current_user = app_database.getUser(session['username'])
-    game_id_list = current_user.games
     
     # For every completed game attached to the player
     #   Display it 
@@ -579,6 +566,19 @@ def playGame(GAMEID=None):
     if not 'username' in session:
         return redirect(url_for('loginPage'))
     
+    # check if game is done
+    game_obj = app_database.getGame(GAMEID)
+    if game_obj is None:
+        return redirect(url_for('gamesPage'))
+    
+    end_time = datetime.datetime.strptime(game_obj.end_time, "%Y-%m-%dT%H:%M")
+    current_time = datetime.datetime.now()
+    
+    if current_time > end_time:
+        game_obj.endGame();
+        return redirect(url_for('oldGames'))
+    
+    
     if request.method == 'GET':
         game_obj = app_database.getGame(GAMEID)
         user_obj = app_database.getUser(session['username'])
@@ -645,6 +645,18 @@ def updateGame(GAMEID=None):
     if not 'username' in session:
         return redirect(url_for('loginPage'))
 
+     # check if game is done
+    game_obj = app_database.getGame(GAMEID)
+    if game_obj is None:
+        return redirect(url_for('gamesPage'))
+    
+    end_time = datetime.datetime.strptime(game_obj.end_time, "%Y-%m-%dT%H:%M")
+    current_time = datetime.datetime.now()
+    
+    if current_time > end_time:
+        game_obj.endGame();
+        return redirect(url_for('oldGames'))
+    
     if request.method == 'GET':
         game_obj = app_database.getGame(GAMEID)
         if not game_obj:
