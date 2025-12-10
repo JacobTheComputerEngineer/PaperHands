@@ -1,3 +1,10 @@
+"""
+Account.py
+Eric Yung, November 21 2025
+
+Class which stores information about any particular user
+"""
+
 import finnhub
 from enum import Enum
 

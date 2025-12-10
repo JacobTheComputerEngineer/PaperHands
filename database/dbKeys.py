@@ -1,3 +1,10 @@
+"""
+dbkeys.py
+Eric Yung, November 21 2025
+
+Collection of global variables for keys to the database to reduce typo errors 
+"""
+
 user_collection = "users"
 games_collection = "games"
 

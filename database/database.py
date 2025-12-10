@@ -1,3 +1,10 @@
+"""
+database.py
+Eric Yung, November 21 2025
+
+Class which controls access to the databse and is responsible for retrieving records for users and games
+"""
+
 from pymongo import MongoClient
 from . import account, game, dbKeys
 from typing import List

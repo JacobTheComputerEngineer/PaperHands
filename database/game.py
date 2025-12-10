@@ -1,3 +1,10 @@
+"""
+Game.py
+Eric Yung, November 21 2025
+
+Class which controls game states and updates the database
+"""
+
 from . import database, account
 from typing import List, Dict
 from datetime import datetime
